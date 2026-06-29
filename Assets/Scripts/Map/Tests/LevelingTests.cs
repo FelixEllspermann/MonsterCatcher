@@ -11,7 +11,7 @@ namespace MonsterCatcher.Map.Tests
         {
             Assert.AreEqual(1, RunState.PlayerRoster.Count);   // one random starter
             var name = RunState.PlayerRoster[0].SpeciesName;
-            Assert.That(name, Is.EqualTo("Mossprig").Or.EqualTo("Cindrop"));
+            Assert.That(name, Is.EqualTo("Mossprig").Or.EqualTo("Cindrop").Or.EqualTo("Voltwig"));
             Assert.AreEqual(1, RunState.PlayerRoster[0].Level);
             Assert.AreEqual(int.MaxValue, RunState.PlayerRoster[0].CurrentHp);
         }
@@ -20,9 +20,10 @@ namespace MonsterCatcher.Map.Tests
         {
             Assert.AreEqual("Mossprig", RunState.StarterFor(0));
             Assert.AreEqual("Cindrop", RunState.StarterFor(1));
+            Assert.AreEqual("Voltwig", RunState.StarterFor(2));
             var seen = new HashSet<string>();
-            for (int s = 0; s < 8; s++) seen.Add(RunState.StarterFor(s));
-            Assert.AreEqual(2, seen.Count);   // both first-stages occur
+            for (int s = 0; s < 12; s++) seen.Add(RunState.StarterFor(s));
+            Assert.AreEqual(3, seen.Count);   // all first-stages occur
         }
 
         [Test] public void ParticipantLevelsBenchGetsShare()
@@ -57,17 +58,17 @@ namespace MonsterCatcher.Map.Tests
             Assert.AreEqual(2, RunState.StageForRow(NodeType.Boss, 1));
         }
 
-        [Test] public void EnemyPoolBothLinesSpawn()
+        [Test] public void EnemyPoolAllThreeLinesSpawn()
         {
             var early = new HashSet<string>();
             var boss = new HashSet<string>();
-            for (int id = 0; id < 40; id++)
+            for (int id = 0; id < 30; id++)
             {
                 early.Add(RunState.EnemySpeciesFor(NodeType.Battle, 2, id, 1));
                 boss.Add(RunState.EnemySpeciesFor(NodeType.Boss, 8, id, 1));
             }
-            Assert.IsTrue(early.Contains("Mossprig") && early.Contains("Cindrop"));   // both first stages
-            Assert.IsTrue(boss.Contains("Elderthorn") && boss.Contains("Vulcarion")); // both finals
+            Assert.IsTrue(early.Contains("Mossprig") && early.Contains("Cindrop") && early.Contains("Voltwig"));
+            Assert.IsTrue(boss.Contains("Elderthorn") && boss.Contains("Vulcarion") && boss.Contains("Tempestag"));
         }
     }
 }

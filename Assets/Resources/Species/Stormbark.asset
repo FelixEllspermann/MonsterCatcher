@@ -1,0 +1,42 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bded280b07c546640af0178bdf203b03, type: 3}
+  m_Name: Stormbark
+  m_EditorClassIdentifier: Battle::MonsterCatcher.Battle.SpeciesData
+  DisplayName: Stormbark
+  Type1: 3
+  Type2: 0
+  HasSecondType: 0
+  BaseHp: 70
+  BaseAttack: 95
+  BaseDefense: 65
+  BaseSpAttack: 50
+  BaseSpDefense: 60
+  BaseSpeed: 115
+  FrontSprite: {fileID: 1145522800122134375, guid: f390f22d709f4e547b865243fcc84c7c, type: 3}
+  BackSprite: {fileID: -4201587486466002368, guid: 83105189818b22a41a119cb7f033a79a, type: 3}
+  EvolvesInto: {fileID: 11400000, guid: 2c05a58565ba6404dbe9277bc1546cca, type: 2}
+  EvolveLevel: 34
+  LearnableMoves: []
+  LevelUpLearnset:
+  - Level: 1
+    Move: {fileID: 11400000, guid: 7527e69a52f18c14282e3b0e32a7fccb, type: 2}
+  - Level: 1
+    Move: {fileID: 11400000, guid: 4114416538ad55a4fab86e81b5ede2a8, type: 2}
+  - Level: 1
+    Move: {fileID: 11400000, guid: c1b4ee1ae05f97146a864dc8248720ab, type: 2}
+  - Level: 18
+    Move: {fileID: 11400000, guid: 9a776e4b8a06c9646a582299d62ad200, type: 2}
+  - Level: 24
+    Move: {fileID: 11400000, guid: 88723b61acdb43740b02eb79f9aecaec, type: 2}
+  - Level: 30
+    Move: {fileID: 11400000, guid: 4f9366b21ddf4d54695dec2dd8c484d3, type: 2}

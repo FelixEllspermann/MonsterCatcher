@@ -35,11 +35,12 @@ namespace MonsterCatcher.Map
         public static int Tier = 1;
 
         // The starter is one random first-stage monster; all six can appear as enemies.
-        public static readonly string[] Starters = { "Mossprig", "Cindrop" };
+        public static readonly string[] Starters = { "Mossprig", "Cindrop", "Voltwig" };
         public static readonly string[][] EnemyLines =
         {
             new[] { "Mossprig", "Briarstag", "Elderthorn" }, // Grass line
             new[] { "Cindrop", "Magmelt", "Vulcarion" },     // Fire line
+            new[] { "Voltwig", "Stormbark", "Tempestag" },   // Electric line
         };
 
         public static string StarterFor(int seed) =>
@@ -55,8 +56,8 @@ namespace MonsterCatcher.Map
 
         private static int EnemyElement(int nodeId, int tier)
         {
-            uint h = (uint)((nodeId * 73856093) ^ ((tier + 1) * 19349663));
-            return (int)(h % (uint)EnemyLines.Length);
+            int m = (nodeId * 31 + tier * 17) % EnemyLines.Length;
+            return m < 0 ? m + EnemyLines.Length : m;
         }
 
         public static string EnemySpeciesFor(NodeType type, int row, int nodeId, int tier) =>
