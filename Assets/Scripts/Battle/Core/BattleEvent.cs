@@ -73,4 +73,16 @@ namespace MonsterCatcher.Battle
         public readonly Pokemon User; public readonly MoveData Move;
         public ChargingEvent(Pokemon user, MoveData move) { User = user; Move = move; }
     }
+
+    public sealed class RecoilEvent : BattleEvent
+    {
+        public readonly Pokemon User; public readonly int Amount;
+        public RecoilEvent(Pokemon user, int amount) { User = user; Amount = amount; }
+    }
+
+    public sealed class DrainEvent : BattleEvent
+    {
+        public readonly Pokemon User; public readonly int Amount;
+        public DrainEvent(Pokemon user, int amount) { User = user; Amount = amount; }
+    }
 }

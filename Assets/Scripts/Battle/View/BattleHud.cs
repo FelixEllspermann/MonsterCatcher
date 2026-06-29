@@ -405,6 +405,8 @@ namespace MonsterCatcher.Battle.View
             {
                 case MoveUsedEvent m: return m.User.Species.DisplayName + " used " + m.Move.DisplayName + "!";
                 case ChargingEvent ce: return ce.User.Species.DisplayName + " is charging up!";
+                case RecoilEvent re: return re.User.Species.DisplayName + " is hit by recoil!";
+                case DrainEvent de: return de.User.Species.DisplayName + " drained HP!";
                 case MissedEvent m: return m.User.Species.DisplayName + "'s attack missed!";
                 case DamageEvent d:
                     return d.Target.Species.DisplayName + " took " + d.Amount + " damage"

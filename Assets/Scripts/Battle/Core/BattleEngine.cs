@@ -171,6 +171,7 @@ namespace MonsterCatcher.Battle
             {
                 target.TakeDamage(dmg.Damage);
                 events.Add(new DamageEvent(target, dmg.Damage, dmg.Effectiveness, dmg.WasCritical));
+                ApplyRecoilAndDrain(user, slot.Move, dmg.Damage, events);
             }
 
             ApplySecondaryEffects(user, target, slot.Move, events);
@@ -179,6 +180,11 @@ namespace MonsterCatcher.Battle
             {
                 events.Add(new FaintedEvent(target));
                 CheckBattleEnd(events);
+            }
+            if (user.IsFainted)
+            {
+                events.Add(new FaintedEvent(user));
+                if (!IsOver) CheckBattleEnd(events);
             }
         }
 
@@ -201,6 +207,24 @@ namespace MonsterCatcher.Battle
                 int applied = recipient.ChangeStage(move.StatToChange, move.StatStageDelta);
                 if (applied != 0)
                     events.Add(new StatChangedEvent(recipient, move.StatToChange, applied));
+            }
+        }
+
+        private static void ApplyRecoilAndDrain(Pokemon user, MoveData move, int damageDealt, List<BattleEvent> events)
+        {
+            if (move.RecoilPercent > 0)
+            {
+                int recoil = damageDealt * move.RecoilPercent / 100;
+                if (recoil < 1) recoil = 1;
+                user.TakeDamage(recoil);
+                events.Add(new RecoilEvent(user, recoil));
+            }
+            if (move.DrainPercent > 0)
+            {
+                int drain = damageDealt * move.DrainPercent / 100;
+                if (drain < 1) drain = 1;
+                user.Heal(drain);
+                events.Add(new DrainEvent(user, drain));
             }
         }
 

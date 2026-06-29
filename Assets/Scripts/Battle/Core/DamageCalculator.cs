@@ -35,7 +35,9 @@ namespace MonsterCatcher.Battle
                 return result;
             }
 
-            bool crit = rng.Roll(settings.CritChance);
+            double critChance = move.HighCrit ? settings.CritChance * 8.0 : settings.CritChance;
+            if (critChance > 1.0) critChance = 1.0;
+            bool crit = rng.Roll(critChance);
             result.WasCritical = crit;
 
             int a, d;

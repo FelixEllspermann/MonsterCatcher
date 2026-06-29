@@ -1,0 +1,31 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: dcb88e70b2c940648b0ddc8b4072987b, type: 3}
+  m_Name: Swift
+  m_EditorClassIdentifier: Battle::MonsterCatcher.Battle.MoveData
+  DisplayName: Swift
+  Type: 0
+  Category: 1
+  Power: 60
+  Accuracy: 0
+  MaxPp: 20
+  Priority: 0
+  InflictsStatus: 0
+  StatusChance: 0
+  StatToChange: 1
+  StatStageDelta: 0
+  StatChangeTargetsSelf: 0
+  StatChangeChance: 0
+  ChargesUp: 0
+  RecoilPercent: 0
+  DrainPercent: 0
+  HighCrit: 0

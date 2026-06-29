@@ -23,5 +23,10 @@ namespace MonsterCatcher.Battle
 
         [Header("Charge")]
         public bool ChargesUp = false;
+
+        [Header("Power effects")]
+        [Range(0, 100)] public int RecoilPercent = 0;   // user takes % of damage dealt
+        [Range(0, 100)] public int DrainPercent = 0;    // user heals % of damage dealt
+        public bool HighCrit = false;                   // boosted critical-hit chance
     }
 }
