@@ -23,6 +23,7 @@ namespace MonsterCatcher.Map
     {
         public const float BenchShare = 0.5f;
         public const int BossLevel = 10;
+        public const int StarterLevel = 5;   // the player's starter begins here
 
         public static bool InRun;
         public static MapModel Map;
@@ -75,7 +76,7 @@ namespace MonsterCatcher.Map
             Cleared.Add(Map.StartId);
             PlayerRoster = new List<MonsterSave>
             {
-                new MonsterSave(StarterFor(seed), 1),
+                new MonsterSave(StarterFor(seed), StarterLevel),
             };
             Tier = 1;
             InRun = true;

@@ -12,7 +12,7 @@ namespace MonsterCatcher.Map.Tests
             Assert.AreEqual(1, RunState.PlayerRoster.Count);   // one random starter
             var name = RunState.PlayerRoster[0].SpeciesName;
             Assert.That(name, Is.EqualTo("Mossprig").Or.EqualTo("Cindrop").Or.EqualTo("Voltwig").Or.EqualTo("Lunakit"));
-            Assert.AreEqual(1, RunState.PlayerRoster[0].Level);
+            Assert.AreEqual(RunState.StarterLevel, RunState.PlayerRoster[0].Level);   // starts at Lv.5
             Assert.AreEqual(int.MaxValue, RunState.PlayerRoster[0].CurrentHp);
         }
 
@@ -30,6 +30,7 @@ namespace MonsterCatcher.Map.Tests
         [Test] public void ParticipantLevelsBenchGetsShare()
         {
             RunState.PlayerRoster.Add(new MonsterSave("Briarstag", 1));   // give it a bench mon
+            RunState.PlayerRoster[0].Level = 1;   // pin the participant so this tests leveling, not the start level
             RunState.ApplyWin(new[] { true, false });
             Assert.AreEqual(2, RunState.PlayerRoster[0].Level);          // participant +1
             Assert.AreEqual(1, RunState.PlayerRoster[1].Level);          // bench still 1
