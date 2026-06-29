@@ -50,5 +50,12 @@ namespace MonsterCatcher.Battle.Tests
             Assert.AreEqual(120, Load("Elderthorn").BaseSpAttack);
             Assert.AreEqual(40, Load("Mossprig").BaseAttack);
         }
+
+        [Test] public void GrassLearnsetRedistributed()
+        {
+            var moves = Load("Mossprig").MovesAtLevel(10);   // special-tank kit
+            Assert.IsTrue(moves.Exists(m => m.DisplayName == "Mega Drain"), "drain");
+            Assert.IsTrue(moves.Exists(m => m.DisplayName == "Sleep Spore"), "sleep");
+        }
     }
 }

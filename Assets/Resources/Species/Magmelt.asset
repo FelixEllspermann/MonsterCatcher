@@ -1,0 +1,42 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bded280b07c546640af0178bdf203b03, type: 3}
+  m_Name: Magmelt
+  m_EditorClassIdentifier: Battle::MonsterCatcher.Battle.SpeciesData
+  DisplayName: Magmelt
+  Type1: 1
+  Type2: 0
+  HasSecondType: 0
+  BaseHp: 65
+  BaseAttack: 50
+  BaseDefense: 50
+  BaseSpAttack: 110
+  BaseSpDefense: 60
+  BaseSpeed: 120
+  FrontSprite: {fileID: -4947981877338920108, guid: 93f80cc32ac7bcf409fd18b2c572c897, type: 3}
+  BackSprite: {fileID: -7624791152750232473, guid: b2318d8ef20ee5d42803918ef56c90f2, type: 3}
+  EvolvesInto: {fileID: 11400000, guid: 7a05c1a23e330b6489e2e394d02ec71d, type: 2}
+  EvolveLevel: 34
+  LearnableMoves: []
+  LevelUpLearnset:
+  - Level: 1
+    Move: {fileID: 11400000, guid: 7527e69a52f18c14282e3b0e32a7fccb, type: 2}
+  - Level: 1
+    Move: {fileID: 11400000, guid: 131b456579f89df4593afb5cb51bf0fb, type: 2}
+  - Level: 1
+    Move: {fileID: 11400000, guid: 589040dddac7eb24387497b40f7887fa, type: 2}
+  - Level: 18
+    Move: {fileID: 11400000, guid: 432981d8976ca4d4c85744d958ecf6bc, type: 2}
+  - Level: 24
+    Move: {fileID: 11400000, guid: cc29cecd686288d488dd747792f92b63, type: 2}
+  - Level: 30
+    Move: {fileID: 11400000, guid: 92e9cb68033f78245b595284cd928911, type: 2}

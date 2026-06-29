@@ -1,0 +1,42 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bded280b07c546640af0178bdf203b03, type: 3}
+  m_Name: Vulcarion
+  m_EditorClassIdentifier: Battle::MonsterCatcher.Battle.SpeciesData
+  DisplayName: Vulcarion
+  Type1: 1
+  Type2: 0
+  HasSecondType: 0
+  BaseHp: 85
+  BaseAttack: 60
+  BaseDefense: 65
+  BaseSpAttack: 155
+  BaseSpDefense: 75
+  BaseSpeed: 135
+  FrontSprite: {fileID: -5831337939779836603, guid: 18cc90daea8cdb7458cda53a6ecc2e8f, type: 3}
+  BackSprite: {fileID: -7468488561018851369, guid: e75186af8396e854aba19a68d89b3fb4, type: 3}
+  EvolvesInto: {fileID: 0}
+  EvolveLevel: 0
+  LearnableMoves: []
+  LevelUpLearnset:
+  - Level: 1
+    Move: {fileID: 11400000, guid: 7527e69a52f18c14282e3b0e32a7fccb, type: 2}
+  - Level: 1
+    Move: {fileID: 11400000, guid: 131b456579f89df4593afb5cb51bf0fb, type: 2}
+  - Level: 1
+    Move: {fileID: 11400000, guid: 589040dddac7eb24387497b40f7887fa, type: 2}
+  - Level: 1
+    Move: {fileID: 11400000, guid: 432981d8976ca4d4c85744d958ecf6bc, type: 2}
+  - Level: 34
+    Move: {fileID: 11400000, guid: cc29cecd686288d488dd747792f92b63, type: 2}
+  - Level: 44
+    Move: {fileID: 11400000, guid: 92e9cb68033f78245b595284cd928911, type: 2}

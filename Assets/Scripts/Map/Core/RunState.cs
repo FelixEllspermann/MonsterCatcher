@@ -34,6 +34,34 @@ namespace MonsterCatcher.Map
         public static List<MonsterSave> PlayerRoster = new List<MonsterSave>();
         public static int Tier = 1;
 
+        // The starter is one random first-stage monster; all six can appear as enemies.
+        public static readonly string[] Starters = { "Mossprig", "Cindrop" };
+        public static readonly string[][] EnemyLines =
+        {
+            new[] { "Mossprig", "Briarstag", "Elderthorn" }, // Grass line
+            new[] { "Cindrop", "Magmelt", "Vulcarion" },     // Fire line
+        };
+
+        public static string StarterFor(int seed) =>
+            Starters[(int)((uint)seed % (uint)Starters.Length)];
+
+        public static int StageForRow(NodeType type, int row)
+        {
+            if (type == NodeType.Boss) return 2;
+            if (row <= 3) return 0;
+            if (row <= 6) return 1;
+            return 2;
+        }
+
+        private static int EnemyElement(int nodeId, int tier)
+        {
+            uint h = (uint)((nodeId * 73856093) ^ ((tier + 1) * 19349663));
+            return (int)(h % (uint)EnemyLines.Length);
+        }
+
+        public static string EnemySpeciesFor(NodeType type, int row, int nodeId, int tier) =>
+            EnemyLines[EnemyElement(nodeId, tier)][StageForRow(type, row)];
+
         public static void NewRun(int seed)
         {
             Map = MapGenerator.Generate(seed);
@@ -45,8 +73,7 @@ namespace MonsterCatcher.Map
             Cleared.Add(Map.StartId);
             PlayerRoster = new List<MonsterSave>
             {
-                new MonsterSave("Mossprig", 1),
-                new MonsterSave("Briarstag", 1),
+                new MonsterSave(StarterFor(seed), 1),
             };
             Tier = 1;
             InRun = true;
@@ -114,13 +141,9 @@ namespace MonsterCatcher.Map
 
         public static string PendingEnemySpecies()
         {
-            if (Map == null || PendingNodeId < 0) return "Elderthorn";
+            if (Map == null || PendingNodeId < 0) return EnemyLines[0][2];
             var node = Map.Get(PendingNodeId);
-            if (node.Type == NodeType.Boss) return "Elderthorn";
-            int r = node.Row;
-            if (r <= 3) return "Mossprig";
-            if (r <= 6) return "Briarstag";
-            return "Elderthorn";
+            return EnemySpeciesFor(node.Type, node.Row, PendingNodeId, Tier);
         }
 
         public static void ApplyWin(bool[] participated)

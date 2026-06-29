@@ -1,0 +1,40 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bded280b07c546640af0178bdf203b03, type: 3}
+  m_Name: Cindrop
+  m_EditorClassIdentifier: Battle::MonsterCatcher.Battle.SpeciesData
+  DisplayName: Cindrop
+  Type1: 1
+  Type2: 0
+  HasSecondType: 0
+  BaseHp: 45
+  BaseAttack: 40
+  BaseDefense: 40
+  BaseSpAttack: 75
+  BaseSpDefense: 45
+  BaseSpeed: 95
+  FrontSprite: {fileID: -1630930704791848325, guid: ab390d754a3171545804275fd998c5c9, type: 3}
+  BackSprite: {fileID: 2941192997509786101, guid: f0663e940c51252419ed8341af9bd240, type: 3}
+  EvolvesInto: {fileID: 11400000, guid: 5f82c9e8e8bb9c44aac13c37978d9c83, type: 2}
+  EvolveLevel: 16
+  LearnableMoves: []
+  LevelUpLearnset:
+  - Level: 1
+    Move: {fileID: 11400000, guid: 7527e69a52f18c14282e3b0e32a7fccb, type: 2}
+  - Level: 1
+    Move: {fileID: 11400000, guid: 131b456579f89df4593afb5cb51bf0fb, type: 2}
+  - Level: 5
+    Move: {fileID: 11400000, guid: 589040dddac7eb24387497b40f7887fa, type: 2}
+  - Level: 9
+    Move: {fileID: 11400000, guid: 432981d8976ca4d4c85744d958ecf6bc, type: 2}
+  - Level: 13
+    Move: {fileID: 11400000, guid: cc29cecd686288d488dd747792f92b63, type: 2}

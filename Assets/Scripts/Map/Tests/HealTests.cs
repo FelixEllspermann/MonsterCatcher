@@ -8,6 +8,7 @@ namespace MonsterCatcher.Map.Tests
         public void VisitHealRestoresHpAndAdvances()
         {
             RunState.NewRun(3);
+            RunState.PlayerRoster.Add(new MonsterSave("Briarstag", 1));   // ensure a 2nd mon to revive
             RunState.PlayerRoster[0].CurrentHp = 1;   // damaged
             RunState.PlayerRoster[1].CurrentHp = 0;   // fainted
             int node = RunState.Available()[0];
