@@ -23,11 +23,11 @@ namespace MonsterCatcher.Map.View
             _font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
             EnsureEventSystem();
             if (RunState.Map == null) RunState.NewRun(System.Environment.TickCount);
+            else if (RunState.RunWon) RunState.NextTier(System.Environment.TickCount);
             BuildUi();
             RefreshNodes();
 
-            if (RunState.RunWon) ShowOverlay("Run cleared! You beat the boss.");
-            else if (RunState.RunLost) ShowOverlay("Game Over.");
+            if (RunState.RunLost) ShowOverlay("Game Over - you reached tier " + RunState.Tier + ".");
         }
 
         // ---- positions -----------------------------------------------------
@@ -57,7 +57,7 @@ namespace MonsterCatcher.Map.View
 
             _title = MakeText(canvasRt, 26, TextAnchor.MiddleCenter, Color.white);
             SetAnchors(_title.rectTransform, 0.04f, 0.93f, 0.96f, 0.99f);
-            _title.text = "Run Map  -  reach the BOSS at the top";
+            _title.text = "Tier " + RunState.Tier + "  -  reach the BOSS";
 
             var container = MakePanel(canvasRt, new Color(0f, 0f, 0f, 0f));
             var crt = container.rectTransform;

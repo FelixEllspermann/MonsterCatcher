@@ -55,6 +55,8 @@ namespace MonsterCatcher.Battle.View
         private bool _isPlaying;
         private Coroutine _playRoutine;
         private Button _continueButton;
+        private GameObject _evoMenu;
+        private int _evoIndex;
 
         // ---- Lifecycle -----------------------------------------------------
 
@@ -167,13 +169,51 @@ namespace MonsterCatcher.Battle.View
             if (eng.IsOver)
             {
                 HideMenus();
-                _message.text = ResultText(eng.Result);
-                if (RunState.InRun && _continueButton != null)
-                    _continueButton.transform.parent.gameObject.SetActive(true);
+                if (RunState.InRun && _controller.PendingEvolutions.Count > 0)
+                {
+                    _evoIndex = 0;
+                    ShowEvolutionPrompt();
+                }
+                else
+                {
+                    _message.text = ResultText(eng.Result);
+                    if (RunState.InRun && _continueButton != null)
+                        _continueButton.transform.parent.gameObject.SetActive(true);
+                }
                 return;
             }
             if (eng.AwaitingForcedSwitch(BattleSide.Player)) { ShowMenu(MenuState.Switch); return; }
             ShowMenu(MenuState.Main);
+        }
+
+        private void ShowEvolutionPrompt()
+        {
+            var pending = _controller.PendingEvolutions;
+            if (_evoIndex >= pending.Count)
+            {
+                if (_evoMenu != null) _evoMenu.SetActive(false);
+                _message.text = ResultText(_controller.Engine.Result);
+                if (_continueButton != null) _continueButton.transform.parent.gameObject.SetActive(true);
+                return;
+            }
+            var offer = pending[_evoIndex];
+            _message.text = offer.FromName + " is evolving into " + offer.ToName + "!";
+            if (_continueButton != null) _continueButton.transform.parent.gameObject.SetActive(false);
+            if (_evoMenu != null) _evoMenu.SetActive(true);
+        }
+
+        private void OnEvolveYes()
+        {
+            var pending = _controller.PendingEvolutions;
+            if (_evoIndex < pending.Count) _controller.EvolveRosterMonster(pending[_evoIndex].RosterIndex);
+            _evoIndex++;
+            ShowEvolutionPrompt();
+        }
+
+        private void OnEvolveNo()
+        {
+            _evoIndex++;
+            ShowEvolutionPrompt();
         }
 
         // ---- Visual state from events -------------------------------------
@@ -276,12 +316,14 @@ namespace MonsterCatcher.Battle.View
             _switchMenu.SetActive(false);
             _itemsMenu.SetActive(false);
             if (_continueButton != null) _continueButton.transform.parent.gameObject.SetActive(false);
+            if (_evoMenu != null) _evoMenu.SetActive(false);
         }
 
         private void ShowMenu(MenuState s)
         {
             _menuState = s;
             if (_continueButton != null) _continueButton.transform.parent.gameObject.SetActive(false);
+            if (_evoMenu != null) _evoMenu.SetActive(false);
             _mainMenu.SetActive(s == MenuState.Main);
             _attackMenu.SetActive(s == MenuState.Attack);
             _switchMenu.SetActive(s == MenuState.Switch);
@@ -514,6 +556,15 @@ namespace MonsterCatcher.Battle.View
             contLbl.text = "Continue";
             _continueButton.onClick.AddListener(() => SceneManager.LoadScene("Map"));
             contRow.SetActive(false);
+
+            _evoMenu = MakeRow(canvasRt);
+            var evoYes = MakeButton(_evoMenu.transform, new Color(0.2f, 0.5f, 0.3f, 1f), out var evoYesLbl);
+            evoYesLbl.text = "Evolve";
+            evoYes.onClick.AddListener(OnEvolveYes);
+            var evoNo = MakeButton(_evoMenu.transform, ColBack, out var evoNoLbl);
+            evoNoLbl.text = "Not now";
+            evoNo.onClick.AddListener(OnEvolveNo);
+            _evoMenu.SetActive(false);
         }
 
         private void BuildInfoPanel(RectTransform panel, out Text name, out Text hpText, out Image hpFill)

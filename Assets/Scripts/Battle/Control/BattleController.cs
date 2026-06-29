@@ -5,6 +5,13 @@ using MonsterCatcher.Map;
 
 namespace MonsterCatcher.Battle
 {
+    public struct EvolutionOffer
+    {
+        public int RosterIndex;
+        public string FromName;
+        public string ToName;
+    }
+
     public sealed class BattleController : MonoBehaviour
     {
         [SerializeField] private BattleSettings _settings;
@@ -19,6 +26,9 @@ namespace MonsterCatcher.Battle
 
         public event Action<IReadOnlyList<BattleEvent>> TurnResolved;
         public BattleEngine Engine => _engine;
+
+        private readonly List<EvolutionOffer> _pendingEvolutions = new List<EvolutionOffer>();
+        public IReadOnlyList<EvolutionOffer> PendingEvolutions => _pendingEvolutions;
 
         public void StartBattle()
         {
@@ -80,7 +90,34 @@ namespace MonsterCatcher.Battle
                 RunState.WriteBackHp(i, _player.Members[i].CurrentHp);
             }
             if (won) RunState.ApplyWin(participated);
+            ComputePendingEvolutions(won);
             RunState.ReportBattleResult(won);
+        }
+
+        private void ComputePendingEvolutions(bool won)
+        {
+            _pendingEvolutions.Clear();
+            if (!won) return;
+            for (int i = 0; i < RunState.PlayerRoster.Count; i++)
+            {
+                var save = RunState.PlayerRoster[i];
+                var sp = Resources.Load<SpeciesData>("Species/" + save.SpeciesName);
+                if (sp != null && sp.CanEvolveAt(save.Level))
+                    _pendingEvolutions.Add(new EvolutionOffer
+                    {
+                        RosterIndex = i,
+                        FromName = sp.DisplayName,
+                        ToName = sp.EvolvesInto.name
+                    });
+            }
+        }
+
+        public void EvolveRosterMonster(int rosterIndex)
+        {
+            if (rosterIndex < 0 || rosterIndex >= RunState.PlayerRoster.Count) return;
+            var save = RunState.PlayerRoster[rosterIndex];
+            var sp = Resources.Load<SpeciesData>("Species/" + save.SpeciesName);
+            if (sp != null && sp.EvolvesInto != null) save.SpeciesName = sp.EvolvesInto.name;
         }
 
         public void PlayerUseMove(int moveIndex) => ResolveTurn(BattleAction.UseMove(moveIndex));

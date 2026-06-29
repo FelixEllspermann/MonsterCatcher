@@ -38,6 +38,11 @@ namespace MonsterCatcher.Battle
             return eligible.GetRange(eligible.Count - 4, 4);
         }
 
+        public bool CanEvolveAt(int level)
+        {
+            return EvolvesInto != null && EvolveLevel > 0 && level >= EvolveLevel;
+        }
+
         public int BaseStat(Stat stat)
         {
             switch (stat)

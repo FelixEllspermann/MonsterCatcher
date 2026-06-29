@@ -32,6 +32,7 @@ namespace MonsterCatcher.Map
         public static bool RunLost;
         public static readonly HashSet<int> Cleared = new HashSet<int>();
         public static List<MonsterSave> PlayerRoster = new List<MonsterSave>();
+        public static int Tier = 1;
 
         public static void NewRun(int seed)
         {
@@ -47,7 +48,20 @@ namespace MonsterCatcher.Map
                 new MonsterSave("Mossprig", 1),
                 new MonsterSave("Briarstag", 1),
             };
+            Tier = 1;
             InRun = true;
+        }
+
+        public static void NextTier(int seed)
+        {
+            Tier += 1;
+            Map = MapGenerator.Generate(seed);
+            CurrentNodeId = Map.StartId;
+            PendingNodeId = -1;
+            RunWon = false;
+            RunLost = false;
+            Cleared.Clear();
+            Cleared.Add(Map.StartId);
         }
 
         public static IReadOnlyList<int> Available()
@@ -94,7 +108,8 @@ namespace MonsterCatcher.Map
         {
             if (Map == null || PendingNodeId < 0) return 5;
             var node = Map.Get(PendingNodeId);
-            return node.Type == NodeType.Boss ? BossLevel : node.Row;
+            int tierBase = (Tier - 1) * BossLevel;
+            return tierBase + (node.Type == NodeType.Boss ? BossLevel : node.Row);
         }
 
         public static string PendingEnemySpecies()
