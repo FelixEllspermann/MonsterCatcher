@@ -1,0 +1,40 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bded280b07c546640af0178bdf203b03, type: 3}
+  m_Name: Lunakit
+  m_EditorClassIdentifier: Battle::MonsterCatcher.Battle.SpeciesData
+  DisplayName: Lunakit
+  Type1: 17
+  Type2: 15
+  HasSecondType: 1
+  BaseHp: 55
+  BaseAttack: 55
+  BaseDefense: 50
+  BaseSpAttack: 55
+  BaseSpDefense: 55
+  BaseSpeed: 70
+  FrontSprite: {fileID: 6169317810585252238, guid: c8aa25d38c1c1394f8b2e0704178de88, type: 3}
+  BackSprite: {fileID: 2565426890319852287, guid: a08636f69930ec04299e4601eaa0d07c, type: 3}
+  EvolvesInto: {fileID: 11400000, guid: b2ba68c0f7f183e4a92cfe0972382543, type: 2}
+  EvolveLevel: 16
+  LearnableMoves: []
+  LevelUpLearnset:
+  - Level: 1
+    Move: {fileID: 11400000, guid: 7527e69a52f18c14282e3b0e32a7fccb, type: 2}
+  - Level: 1
+    Move: {fileID: 11400000, guid: 207a7e35317f5354a8036f0bdd46d694, type: 2}
+  - Level: 6
+    Move: {fileID: 11400000, guid: c1b4ee1ae05f97146a864dc8248720ab, type: 2}
+  - Level: 10
+    Move: {fileID: 11400000, guid: 45794cd3f70cff040a0df5b0dd069f69, type: 2}
+  - Level: 14
+    Move: {fileID: 11400000, guid: f2de64d1cc69e0e48b367b75c65e768c, type: 2}

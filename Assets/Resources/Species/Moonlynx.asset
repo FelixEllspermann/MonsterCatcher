@@ -1,0 +1,42 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bded280b07c546640af0178bdf203b03, type: 3}
+  m_Name: Moonlynx
+  m_EditorClassIdentifier: Battle::MonsterCatcher.Battle.SpeciesData
+  DisplayName: Moonlynx
+  Type1: 17
+  Type2: 15
+  HasSecondType: 1
+  BaseHp: 70
+  BaseAttack: 75
+  BaseDefense: 65
+  BaseSpAttack: 75
+  BaseSpDefense: 65
+  BaseSpeed: 105
+  FrontSprite: {fileID: -6932532622951620154, guid: 83f595dbc5e18bd48a65b6d6f56e0959, type: 3}
+  BackSprite: {fileID: -6518461574597225185, guid: 18c7d9b20ee56444fb7852cd0f219005, type: 3}
+  EvolvesInto: {fileID: 11400000, guid: b4b8bdd5da3b8ff4cb60d25fa9c884e1, type: 2}
+  EvolveLevel: 34
+  LearnableMoves: []
+  LevelUpLearnset:
+  - Level: 1
+    Move: {fileID: 11400000, guid: 7527e69a52f18c14282e3b0e32a7fccb, type: 2}
+  - Level: 1
+    Move: {fileID: 11400000, guid: 207a7e35317f5354a8036f0bdd46d694, type: 2}
+  - Level: 1
+    Move: {fileID: 11400000, guid: c1b4ee1ae05f97146a864dc8248720ab, type: 2}
+  - Level: 18
+    Move: {fileID: 11400000, guid: 45794cd3f70cff040a0df5b0dd069f69, type: 2}
+  - Level: 24
+    Move: {fileID: 11400000, guid: f2de64d1cc69e0e48b367b75c65e768c, type: 2}
+  - Level: 30
+    Move: {fileID: 11400000, guid: 1c52f09913c5eaa43a4e835cdab08f96, type: 2}
