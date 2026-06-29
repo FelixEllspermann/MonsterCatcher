@@ -1,0 +1,65 @@
+# ----------------------------------------------------------------------------
+# Unity generated / caches (never committed)
+# ----------------------------------------------------------------------------
+[Ll]ibrary/
+[Tt]emp/
+[Oo]bj/
+[Bb]uild/
+[Bb]uilds/
+[Ll]ogs/
+[Uu]ser[Ss]ettings/
+[Mm]emoryCaptures/
+[Rr]ecordings/
+
+# Asset meta files must stay paired with their assets — only ignore a .meta
+# when the asset itself is ignored.
+!/[Aa]ssets/**/*.meta
+
+# Debug screenshots captured during development
+/[Aa]ssets/[Ss]creenshots/
+
+# JetBrains Rider / VS / MonoDevelop generated project files
+.vs/
+.gradle/
+.idea/
+ExportedObj/
+.consulo/
+*.csproj
+*.unityproj
+*.sln
+*.slnx
+*.suo
+*.tmp
+*.user
+*.userprefs
+*.pidb
+*.booproj
+*.svd
+*.pdb
+*.mdb
+*.opendb
+*.VC.db
+/[Aa]ssets/Plugins/Editor/JetBrains*
+
+# Unity3D crash reports
+sysinfo.txt
+
+# Builds / packages
+*.apk
+*.aab
+*.unitypackage
+*.app
+
+# Crashlytics
+crashlytics-build.properties
+
+# Packed Addressables
+/[Aa]ssets/[Aa]ddressable[Aa]ssets[Dd]ata/*/*.bin*
+
+# Temporary auto-generated Android assets
+/[Aa]ssets/[Ss]treamingAssets/aa.meta
+/[Aa]ssets/[Ss]treamingAssets/aa/*
+
+# OS noise
+.DS_Store
+Thumbs.db

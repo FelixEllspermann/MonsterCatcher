@@ -1,0 +1,14 @@
+{
+    "name": "Battle",
+    "rootNamespace": "MonsterCatcher.Battle",
+    "references": ["Map"],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

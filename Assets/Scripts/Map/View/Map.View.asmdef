@@ -1,0 +1,14 @@
+{
+    "name": "Map.View",
+    "rootNamespace": "MonsterCatcher.Map.View",
+    "references": ["Map", "UnityEngine.UI", "Unity.InputSystem"],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

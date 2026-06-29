@@ -1,0 +1,38 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bded280b07c546640af0178bdf203b03, type: 3}
+  m_Name: Elderthorn
+  m_EditorClassIdentifier: Battle::MonsterCatcher.Battle.SpeciesData
+  DisplayName: Elderthorn
+  Type1: 4
+  Type2: 0
+  HasSecondType: 0
+  BaseHp: 90
+  BaseAttack: 60
+  BaseDefense: 85
+  BaseSpAttack: 120
+  BaseSpDefense: 125
+  BaseSpeed: 95
+  FrontSprite: {fileID: -1117830891558774097, guid: df249b3960315694398086b689739a83, type: 3}
+  BackSprite: {fileID: -5362105598765443799, guid: d616853f069c63045b60b9fc8c53c276, type: 3}
+  EvolvesInto: {fileID: 0}
+  EvolveLevel: 0
+  LearnableMoves: []
+  LevelUpLearnset:
+  - Level: 1
+    Move: {fileID: 11400000, guid: 7527e69a52f18c14282e3b0e32a7fccb, type: 2}
+  - Level: 1
+    Move: {fileID: 11400000, guid: 84ad766c3394b1045bf1a3f0e3cadf67, type: 2}
+  - Level: 5
+    Move: {fileID: 11400000, guid: e7ef643db6a338043b0efbd05e84a787, type: 2}
+  - Level: 8
+    Move: {fileID: 11400000, guid: b0e35c125bd5abf4d963d1699a2d5785, type: 2}

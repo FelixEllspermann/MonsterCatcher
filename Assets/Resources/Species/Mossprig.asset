@@ -1,0 +1,38 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bded280b07c546640af0178bdf203b03, type: 3}
+  m_Name: Mossprig
+  m_EditorClassIdentifier: Battle::MonsterCatcher.Battle.SpeciesData
+  DisplayName: Mossprig
+  Type1: 4
+  Type2: 0
+  HasSecondType: 0
+  BaseHp: 50
+  BaseAttack: 40
+  BaseDefense: 55
+  BaseSpAttack: 65
+  BaseSpDefense: 70
+  BaseSpeed: 60
+  FrontSprite: {fileID: -4871744745249162990, guid: 32ab1001a124d1e45a53475e4621dcfa, type: 3}
+  BackSprite: {fileID: -6959106274839564057, guid: b8d100c3dbfcb0c45a8d1e2d019acad0, type: 3}
+  EvolvesInto: {fileID: 11400000, guid: a7e5aa27dea6c1f4f83dd457f235f68a, type: 2}
+  EvolveLevel: 16
+  LearnableMoves: []
+  LevelUpLearnset:
+  - Level: 1
+    Move: {fileID: 11400000, guid: 7527e69a52f18c14282e3b0e32a7fccb, type: 2}
+  - Level: 1
+    Move: {fileID: 11400000, guid: 84ad766c3394b1045bf1a3f0e3cadf67, type: 2}
+  - Level: 4
+    Move: {fileID: 11400000, guid: 82b6b1de3e2a6754089c3b65f049aea0, type: 2}
+  - Level: 7
+    Move: {fileID: 11400000, guid: e7ef643db6a338043b0efbd05e84a787, type: 2}
