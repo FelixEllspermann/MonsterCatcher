@@ -91,5 +91,24 @@ namespace MonsterCatcher.Map.Tests
                 Assert.AreEqual(a.Nodes[i].Next.Count, b.Nodes[i].Next.Count);
             }
         }
+
+        [Test]
+        public void HealNodesAppearOnlyOnFloors2Plus()
+        {
+            int healTotal = 0;
+            for (int seed = 0; seed <= 50; seed++)
+            {
+                var m = MapGenerator.Generate(seed);
+                foreach (var n in m.Nodes)
+                {
+                    if (n.Type == NodeType.Heal)
+                    {
+                        healTotal++;
+                        Assert.IsTrue(n.Row >= 2 && n.Row <= 8, "heal on row " + n.Row + " seed " + seed);
+                    }
+                }
+            }
+            Assert.Greater(healTotal, 0, "expected some Heal nodes across seeds");
+        }
     }
 }

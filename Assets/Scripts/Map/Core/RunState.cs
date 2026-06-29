@@ -127,5 +127,19 @@ namespace MonsterCatcher.Map
         {
             if (index >= 0 && index < PlayerRoster.Count) PlayerRoster[index].CurrentHp = hp;
         }
+
+        public static void HealParty()
+        {
+            foreach (var m in PlayerRoster) m.CurrentHp = int.MaxValue;
+        }
+
+        public static bool VisitHeal(int id)
+        {
+            if (!CanSelect(id)) return false;
+            HealParty();
+            Cleared.Add(id);
+            CurrentNodeId = id;
+            return true;
+        }
     }
 }

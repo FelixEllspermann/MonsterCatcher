@@ -14,6 +14,7 @@ namespace MonsterCatcher.Map.View
 
         private Font _font;
         private RectTransform _container;
+        private Text _title;
         private readonly Dictionary<int, Button> _nodeButtons = new Dictionary<int, Button>();
         private readonly Dictionary<int, Image> _nodeImages = new Dictionary<int, Image>();
 
@@ -54,9 +55,9 @@ namespace MonsterCatcher.Map.View
             var bg = MakePanel(canvasRt, new Color(0.10f, 0.12f, 0.16f, 1f));
             Stretch(bg.rectTransform);
 
-            var title = MakeText(canvasRt, 26, TextAnchor.MiddleCenter, Color.white);
-            SetAnchors(title.rectTransform, 0.04f, 0.93f, 0.96f, 0.99f);
-            title.text = "Run Map  -  reach the BOSS at the top";
+            _title = MakeText(canvasRt, 26, TextAnchor.MiddleCenter, Color.white);
+            SetAnchors(_title.rectTransform, 0.04f, 0.93f, 0.96f, 0.99f);
+            _title.text = "Run Map  -  reach the BOSS at the top";
 
             var container = MakePanel(canvasRt, new Color(0f, 0f, 0f, 0f));
             var crt = container.rectTransform;
@@ -103,7 +104,7 @@ namespace MonsterCatcher.Map.View
 
             var label = MakeText(rt, n.Type == NodeType.Boss ? 18 : 14, TextAnchor.MiddleCenter, Color.white);
             Stretch(label.rectTransform);
-            label.text = n.Type == NodeType.Start ? "Start" : n.Type == NodeType.Boss ? "BOSS" : "";
+            label.text = n.Type == NodeType.Start ? "Start" : n.Type == NodeType.Boss ? "BOSS" : n.Type == NodeType.Heal ? "+" : "";
 
             _nodeButtons[n.Id] = btn;
             _nodeImages[n.Id] = img;
@@ -129,6 +130,12 @@ namespace MonsterCatcher.Map.View
                 if (status == NodeStatus.Cleared || status == NodeStatus.Current) return new Color(0.55f, 0.2f, 0.5f);
                 return new Color(0.35f, 0.15f, 0.15f);
             }
+            if (type == NodeType.Heal)
+            {
+                if (status == NodeStatus.Available) return new Color(0.95f, 0.45f, 0.7f);
+                if (status == NodeStatus.Cleared || status == NodeStatus.Current) return new Color(0.6f, 0.35f, 0.5f);
+                return new Color(0.42f, 0.28f, 0.35f);
+            }
             switch (status)
             {
                 case NodeStatus.Current: return new Color(0.95f, 0.82f, 0.25f);
@@ -141,6 +148,13 @@ namespace MonsterCatcher.Map.View
         private void OnNodeClicked(int id)
         {
             if (!RunState.CanSelect(id)) return;
+            if (RunState.Map.Get(id).Type == NodeType.Heal)
+            {
+                RunState.VisitHeal(id);
+                if (_title != null) _title.text = "Party fully healed!";
+                RefreshNodes();
+                return;
+            }
             RunState.Select(id);
             SceneManager.LoadScene("Battle");
         }
