@@ -18,15 +18,46 @@ namespace MonsterCatcher.Battle
         public bool Participated;
         public int ChargingMoveIndex = -1;
 
+        public sealed class AbilityRuntimeState
+        {
+            public bool LastStandUsed, PhoenixUsed, SecondWindUsed, FirstHitTaken;
+            public int TurnsOut;
+        }
+
+        private readonly List<string> _abilityIds;
+        public IReadOnlyList<string> AbilityIds => _abilityIds;
+        public AbilityRuntimeState AbilityState { get; } = new AbilityRuntimeState();
+        public bool HasAbility(string id) => _abilityIds.Contains(id);
+
+        public IEnumerable<MonsterCatcher.Map.AbilityEffect> AbilityEffects
+        {
+            get
+            {
+                foreach (var id in _abilityIds)
+                {
+                    var info = MonsterCatcher.Map.AbilityCatalog.ById(id);
+                    if (info != null) yield return info.Effect;
+                }
+            }
+        }
+
         public IReadOnlyList<MoveSlot> Moves => _moves;
         public bool IsFainted => CurrentHp <= 0;
 
         public Pokemon(SpeciesData species, int level, IList<MoveData> moves)
+            : this(species, level, moves, null) { }
+
+        public Pokemon(SpeciesData species, int level, IList<MoveData> moves,
+            IEnumerable<string> abilityIds)
         {
             Species = species;
             Level = level;
+            _abilityIds = abilityIds != null ? new List<string>(abilityIds) : new List<string>();
 
-            MaxHp = (2 * species.BaseHp * level) / 100 + level + 10;
+            int baseMax = (2 * species.BaseHp * level) / 100 + level + 10;
+            float hpMult = AbilityApplier.StatMult(this, Stat.Hp);
+            MaxHp = (int)(baseMax * hpMult);
+            if (MaxHp < 1) MaxHp = 1;
             _rawStats[(int)Stat.Hp] = MaxHp;
             _rawStats[(int)Stat.Attack] = CalcStat(species.BaseAttack, level);
             _rawStats[(int)Stat.Defense] = CalcStat(species.BaseDefense, level);
@@ -59,6 +90,7 @@ namespace MonsterCatcher.Battle
             if (crit && ignoreNegative && stage < 0) stage = 0;
             if (crit && ignorePositive && stage > 0) stage = 0;
             double value = _rawStats[(int)stat] * StatStages.Multiplier(stage);
+            if (stat != Stat.Hp) value *= AbilityApplier.StatMult(this, stat);
             int result = (int)Math.Floor(value);
             return result < 1 ? 1 : result;
         }

@@ -56,7 +56,7 @@ namespace MonsterCatcher.Battle
             {
                 var species = Resources.Load<SpeciesData>("Species/" + save.SpeciesName);
                 if (species == null) continue;
-                var p = new Pokemon(species, save.Level, MovesFor(species, save.Level));
+                var p = new Pokemon(species, save.Level, MovesFor(species, save.Level), save.AbilityIds);
                 if (save.CurrentHp < p.MaxHp) p.SetCurrentHp(save.CurrentHp);
                 mons.Add(p);
             }

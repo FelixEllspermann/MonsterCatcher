@@ -43,5 +43,8 @@ namespace MonsterCatcher.Battle.Tests
         {
             return new Pokemon(species, 50, new List<MoveData>(moves));
         }
+
+        public static List<MoveData> OneMove() =>
+            new List<MoveData> { Move("Tackle", ElementType.Normal, MoveCategory.Physical, 40) };
     }
 }

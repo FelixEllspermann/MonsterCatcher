@@ -1,7 +1,7 @@
 {
     "name": "Battle.Tests",
     "rootNamespace": "MonsterCatcher.Battle.Tests",
-    "references": ["Battle", "UnityEngine.TestRunner", "UnityEditor.TestRunner"],
+    "references": ["Battle", "Map", "UnityEngine.TestRunner", "UnityEditor.TestRunner"],
     "includePlatforms": ["Editor"],
     "excludePlatforms": [],
     "allowUnsafeCode": false,

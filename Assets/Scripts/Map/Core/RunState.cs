@@ -9,6 +9,7 @@ namespace MonsterCatcher.Map
         public int Level;
         public float LevelProgress;
         public int CurrentHp;   // persisted; int.MaxValue = full
+        public List<string> AbilityIds = new List<string>();   // normally 1; rolled at creation
 
         public MonsterSave(string speciesName, int level)
         {
@@ -65,6 +66,12 @@ namespace MonsterCatcher.Map
         public static string EnemySpeciesFor(NodeType type, int row, int nodeId, int tier) =>
             EnemyLines[EnemyElement(nodeId, tier)][StageForRow(type, row)];
 
+        public static void RollStarterAbility(MonsterSave save, int seed)
+        {
+            if (save.AbilityIds.Count == 0)
+                save.AbilityIds.Add(AbilityCatalog.RollId(seed));
+        }
+
         public static void NewRun(int seed)
         {
             Map = MapGenerator.Generate(seed);
@@ -78,6 +85,7 @@ namespace MonsterCatcher.Map
             {
                 new MonsterSave(StarterFor(seed), StarterLevel),
             };
+            RollStarterAbility(PlayerRoster[0], seed ^ 0x5f3759df);
             Tier = 1;
             InRun = true;
         }
