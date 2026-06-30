@@ -18,6 +18,7 @@ namespace MonsterCatcher.Map.View
         private readonly Dictionary<int, Button> _nodeButtons = new Dictionary<int, Button>();
         private readonly Dictionary<int, Image> _nodeImages = new Dictionary<int, Image>();
         private MonsterView _monsterView;
+        private ShopView _shopView;
 
         private void Start()
         {
@@ -110,7 +111,7 @@ namespace MonsterCatcher.Map.View
 
             var label = MakeText(rt, n.Type == NodeType.Boss ? 18 : 14, TextAnchor.MiddleCenter, Color.white);
             Stretch(label.rectTransform);
-            label.text = n.Type == NodeType.Start ? "Start" : n.Type == NodeType.Boss ? "BOSS" : n.Type == NodeType.Heal ? "+" : "";
+            label.text = n.Type == NodeType.Start ? "Start" : n.Type == NodeType.Boss ? "BOSS" : n.Type == NodeType.Heal ? "+" : n.Type == NodeType.Shop ? "$" : "";
 
             _nodeButtons[n.Id] = btn;
             _nodeImages[n.Id] = img;
@@ -142,6 +143,12 @@ namespace MonsterCatcher.Map.View
                 if (status == NodeStatus.Cleared || status == NodeStatus.Current) return new Color(0.6f, 0.35f, 0.5f);
                 return new Color(0.42f, 0.28f, 0.35f);
             }
+            if (type == NodeType.Shop)
+            {
+                if (status == NodeStatus.Available) return new Color(0.95f, 0.82f, 0.3f);
+                if (status == NodeStatus.Cleared || status == NodeStatus.Current) return new Color(0.6f, 0.55f, 0.3f);
+                return new Color(0.4f, 0.38f, 0.25f);
+            }
             switch (status)
             {
                 case NodeStatus.Current: return new Color(0.95f, 0.82f, 0.25f);
@@ -165,6 +172,12 @@ namespace MonsterCatcher.Map.View
                 RunState.VisitHeal(id);
                 if (_title != null) _title.text = "Party fully healed!";
                 RefreshNodes();
+                return;
+            }
+            if (RunState.Map.Get(id).Type == NodeType.Shop)
+            {
+                if (_shopView == null) _shopView = new GameObject("ShopView").AddComponent<ShopView>();
+                _shopView.Open(id, () => { if (_title != null) _title.text = "Left the shop."; RefreshNodes(); });
                 return;
             }
             RunState.Select(id);

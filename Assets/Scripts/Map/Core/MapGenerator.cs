@@ -10,6 +10,7 @@ namespace MonsterCatcher.Map
         public const int MaxPerFloor = 5;
         public const double BranchChance = 0.4;
         public const double HealChance = 0.1;
+        public const double ShopChance = 0.1;
 
         public static MapModel Generate(int seed)
         {
@@ -30,7 +31,13 @@ namespace MonsterCatcher.Map
                 for (int i = 0; i < count; i++)
                 {
                     float x = (i + 0.5f) / count;
-                    var type = (f >= 2 && rng.NextDouble() < HealChance) ? NodeType.Heal : NodeType.Battle;
+                    var type = NodeType.Battle;
+                    if (f >= 2)
+                    {
+                        double r = rng.NextDouble();
+                        if (r < HealChance) type = NodeType.Heal;
+                        else if (r < HealChance + ShopChance) type = NodeType.Shop;
+                    }
                     var node = new MapNode(nextId++, f, x, type);
                     nodes.Add(node);
                     rowNodes.Add(node);

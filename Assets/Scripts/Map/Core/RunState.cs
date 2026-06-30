@@ -199,6 +199,14 @@ namespace MonsterCatcher.Map
             return true;
         }
 
+        public static bool VisitShop(int id)
+        {
+            if (!CanSelect(id)) return false;
+            Cleared.Add(id);
+            CurrentNodeId = id;
+            return true;
+        }
+
         // Release a roster monster (only when more than one remains).
         public static bool ReleaseMonster(int index)
         {
