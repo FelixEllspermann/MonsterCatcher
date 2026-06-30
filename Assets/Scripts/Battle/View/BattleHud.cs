@@ -58,6 +58,9 @@ namespace MonsterCatcher.Battle.View
         private GameObject _evoMenu;
         private int _evoIndex;
 
+        private RectTransform _canvasRt;
+        private GameObject _tipGo; private RectTransform _tipRt; private Text _tipText;
+
         // ---- Lifecycle -----------------------------------------------------
 
         private void Start()
@@ -226,6 +229,8 @@ namespace MonsterCatcher.Battle.View
                 case StatusDamageEvent sd: AdjustHp(sd.Target, -sd.Amount); break;
                 case FaintedEvent f: SetHp(f.Target, 0); break;
                 case SwitchedInEvent si: SwitchPanel(si.Side, si.Pokemon); break;
+                case StatusInflictedEvent sie: UpdatePanel(SideOf(sie.Target)); break;
+                case StatusEndedEvent see: UpdatePanel(SideOf(see.Target)); break;
             }
         }
 
@@ -412,6 +417,7 @@ namespace MonsterCatcher.Battle.View
                     return d.Target.Species.DisplayName + " took " + d.Amount + " damage"
                            + (d.WasCritical ? " (a critical hit!)" : "") + "." + EffNote(d.Effectiveness);
                 case StatusInflictedEvent s: return s.Target.Species.DisplayName + " was afflicted by " + s.Status + "!";
+                case StatusEndedEvent se: return se.Target.Species.DisplayName + (se.Status == StatusCondition.Sleep ? " woke up!" : "'s " + se.Status + " wore off!");
                 case StatusDamageEvent sd: return sd.Target.Species.DisplayName + " is hurt by " + sd.Status + "!";
                 case StatChangedEvent sc:
                     return sc.Target.Species.DisplayName + "'s " + sc.Stat + (sc.DeltaStages > 0 ? " rose!" : " fell!");
@@ -430,6 +436,56 @@ namespace MonsterCatcher.Battle.View
             if (eff > 1.0) return " It's super effective!";
             if (eff < 1.0) return " It's not very effective...";
             return "";
+        }
+
+        private static string StatusDescription(StatusCondition s)
+        {
+            switch (s)
+            {
+                case StatusCondition.Poison: return "Poison: loses HP at the end of each turn.";
+                case StatusCondition.Burn: return "Burn: loses HP each turn and deals less physical damage.";
+                case StatusCondition.Paralysis: return "Paralysis: lower Speed, and may be unable to move.";
+                case StatusCondition.Sleep: return "Sleep: cannot act until it wakes up.";
+                default: return "";
+            }
+        }
+
+        // ---- Tooltip (pointer-following) ----------------------------------
+        private void BuildTooltip()
+        {
+            var p = MakePanel(_canvasRt, new Color(0f, 0f, 0f, 0.92f));
+            _tipRt = p.rectTransform;
+            _tipRt.anchorMin = _tipRt.anchorMax = new Vector2(0.5f, 0.5f);
+            _tipRt.pivot = new Vector2(0f, 1f);
+            _tipRt.sizeDelta = new Vector2(380f, 60f);
+            p.raycastTarget = false;
+            _tipText = MakeText(_tipRt, 15, TextAnchor.MiddleLeft, Color.white);
+            SetAnchors(_tipText.rectTransform, 0.03f, 0.05f, 0.97f, 0.95f);
+            _tipGo = p.gameObject;
+            _tipGo.SetActive(false);
+        }
+
+        private void ShowTip(string text, Vector2 screenPos)
+        {
+            if (string.IsNullOrEmpty(text) || _tipRt == null) return;
+            _tipText.text = text;
+            _tipRt.SetAsLastSibling();
+            if (RectTransformUtility.ScreenPointToLocalPointInRectangle(_canvasRt, screenPos, null, out var local))
+                _tipRt.anchoredPosition = local + new Vector2(14f, -14f);
+            _tipGo.SetActive(true);
+        }
+
+        private void HideTip() { if (_tipGo != null) _tipGo.SetActive(false); }
+
+        private void AddHover(GameObject target, System.Func<string> textProvider)
+        {
+            var et = target.AddComponent<EventTrigger>();
+            var enter = new EventTrigger.Entry { eventID = EventTriggerType.PointerEnter };
+            enter.callback.AddListener(d => ShowTip(textProvider(), ((PointerEventData)d).position));
+            et.triggers.Add(enter);
+            var exit = new EventTrigger.Entry { eventID = EventTriggerType.PointerExit };
+            exit.callback.AddListener(d => HideTip());
+            et.triggers.Add(exit);
         }
 
         // ---- UI construction ----------------------------------------------
@@ -452,6 +508,7 @@ namespace MonsterCatcher.Battle.View
             scaler.referenceResolution = new Vector2(1280, 720);
             canvasGo.AddComponent<GraphicRaycaster>();
             var canvasRt = (RectTransform)canvasGo.transform;
+            _canvasRt = canvasRt;
 
             var bg = MakePanel(canvasRt, new Color(0.12f, 0.14f, 0.20f, 1f));
             Stretch(bg.rectTransform);
@@ -465,6 +522,10 @@ namespace MonsterCatcher.Battle.View
             var playerPanel = MakePanel(canvasRt, new Color(0f, 0f, 0f, 0.35f));
             SetAnchors(playerPanel.rectTransform, 0.54f, 0.47f, 0.96f, 0.67f);
             BuildInfoPanel(playerPanel.rectTransform, out _playerName, out _playerHpText, out _playerHpFill);
+
+            // Hover the info panel to read what a current status condition does.
+            AddHover(enemyPanel.gameObject, () => StatusDescription(_shownEnemy != null ? _shownEnemy.Status : StatusCondition.None));
+            AddHover(playerPanel.gameObject, () => StatusDescription(_shownPlayer != null ? _shownPlayer.Status : StatusCondition.None));
 
             // Monster sprites (enemy front upper-right, player back lower-left)
             _enemySprite = MakePanel(canvasRt, Color.white);
@@ -567,6 +628,8 @@ namespace MonsterCatcher.Battle.View
             evoNoLbl.text = "Not now";
             evoNo.onClick.AddListener(OnEvolveNo);
             _evoMenu.SetActive(false);
+
+            BuildTooltip();
         }
 
         private void BuildInfoPanel(RectTransform panel, out Text name, out Text hpText, out Image hpFill)
@@ -579,8 +642,10 @@ namespace MonsterCatcher.Battle.View
 
             var barBg = MakePanel(panel, new Color(0.08f, 0.08f, 0.08f, 1f));
             SetAnchors(barBg.rectTransform, 0.04f, 0.10f, 0.96f, 0.30f);
+            barBg.raycastTarget = false;
             hpFill = MakePanel(barBg.rectTransform, new Color(0.25f, 0.8f, 0.3f, 1f));
             SetAnchors(hpFill.rectTransform, 0f, 0f, 1f, 1f);
+            hpFill.raycastTarget = false;
         }
 
         private GameObject MakeRow(RectTransform parent)

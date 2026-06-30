@@ -14,7 +14,7 @@ namespace MonsterCatcher.Battle
         public int MaxHp { get; }
         public int CurrentHp { get; private set; }
         public StatusCondition Status { get; private set; }
-        public int SleepTurnsLeft { get; set; }
+        public int StatusTurnsLeft { get; set; }   // turns until the current status wears off
         public bool Participated;
         public int ChargingMoveIndex = -1;
 
@@ -134,20 +134,33 @@ namespace MonsterCatcher.Battle
             CurrentHp = hp;
         }
 
-        public bool TryApplyStatus(StatusCondition status, int sleepTurns = 0)
+        public bool TryApplyStatus(StatusCondition status, int turns = 0)
         {
             if (status == StatusCondition.None) return false;
             if (Status != StatusCondition.None || IsFainted) return false;
             if (AbilityApplier.ImmuneToStatus(this, status)) return false;
             Status = status;
-            SleepTurnsLeft = status == StatusCondition.Sleep ? sleepTurns : 0;
+            StatusTurnsLeft = turns > 0 ? turns : DefaultStatusDuration(status);
             return true;
+        }
+
+        // How many turns a status lasts before it wears off (Sleep is usually overridden by the engine's RNG roll).
+        public static int DefaultStatusDuration(StatusCondition status)
+        {
+            switch (status)
+            {
+                case StatusCondition.Sleep: return 2;
+                case StatusCondition.Paralysis: return 4;
+                case StatusCondition.Poison: return 6;
+                case StatusCondition.Burn: return 6;
+                default: return 0;
+            }
         }
 
         public void CureStatus()
         {
             Status = StatusCondition.None;
-            SleepTurnsLeft = 0;
+            StatusTurnsLeft = 0;
         }
     }
 }

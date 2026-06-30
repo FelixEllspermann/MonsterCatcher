@@ -1,21 +1,29 @@
 using System.Collections.Generic;
 using System.Text;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.UI;
 using MonsterCatcher.Battle;
 
 namespace MonsterCatcher.Map.View
 {
-    // Runtime-built overlay (same uGUI pattern as MapController): party list on the left,
-    // selected monster's sprite/stats/lore/moves/ability on the right, plus Release.
+    // Runtime-built overlay: party list + selected monster's stats (hover for help), lore,
+    // ability, and moves (click for a description popup), plus Release.
     public sealed class MonsterView : MonoBehaviour
     {
+        private static readonly Color SectionBg = new Color(1f, 1f, 1f, 0.05f);
+        private static readonly Color Header = new Color(0.55f, 0.68f, 0.85f);
+
         private Font _font;
         private GameObject _root;
+        private RectTransform _canvasRt;
         private RectTransform _listCol;
         private RectTransform _detail;
         private int _selected;
         private bool _confirmingRelease;
+
+        private GameObject _tipGo; private RectTransform _tipRt; private Text _tipText;
+        private GameObject _movePopup; private Text _movePopupText;
 
         private void Awake()
         {
@@ -30,6 +38,8 @@ namespace MonsterCatcher.Map.View
             _selected = 0;
             _confirmingRelease = false;
             _root.SetActive(true);
+            HideTip();
+            if (_movePopup != null) _movePopup.SetActive(false);
             RebuildList();
             RebuildDetail();
         }
@@ -47,27 +57,30 @@ namespace MonsterCatcher.Map.View
             scaler.referenceResolution = new Vector2(1280, 720);
             canvasGo.AddComponent<GraphicRaycaster>();
             _root = canvasGo;
-            var rt = (RectTransform)canvasGo.transform;
+            _canvasRt = (RectTransform)canvasGo.transform;
 
-            var dim = MakePanel(rt, new Color(0.05f, 0.06f, 0.09f, 0.97f));
+            var dim = MakePanel(_canvasRt, new Color(0.07f, 0.08f, 0.12f, 0.98f));
             Stretch(dim.rectTransform);
 
-            var title = MakeText(rt, 28, TextAnchor.MiddleCenter, Color.white);
+            var title = MakeText(_canvasRt, 28, TextAnchor.MiddleCenter, Color.white);
             SetAnchors(title.rectTransform, 0.05f, 0.92f, 0.85f, 0.99f);
             title.text = "Your Monsters";
 
-            var close = MakeButton(rt, new Color(0.5f, 0.2f, 0.2f), out var clbl);
+            var close = MakeButton(_canvasRt, new Color(0.5f, 0.2f, 0.2f), out var clbl);
             SetAnchors((RectTransform)close.transform, 0.87f, 0.93f, 0.98f, 0.99f);
             clbl.text = "Close";
             close.onClick.AddListener(Hide);
 
-            var listPanel = MakePanel(rt, new Color(1f, 1f, 1f, 0.04f));
-            SetAnchors(listPanel.rectTransform, 0.03f, 0.05f, 0.30f, 0.90f);
+            var listPanel = MakePanel(_canvasRt, SectionBg);
+            SetAnchors(listPanel.rectTransform, 0.03f, 0.05f, 0.29f, 0.90f);
             _listCol = listPanel.rectTransform;
 
-            var detailPanel = MakePanel(rt, new Color(1f, 1f, 1f, 0.04f));
-            SetAnchors(detailPanel.rectTransform, 0.32f, 0.05f, 0.97f, 0.90f);
+            var detailPanel = MakePanel(_canvasRt, new Color(1f, 1f, 1f, 0.02f));
+            SetAnchors(detailPanel.rectTransform, 0.31f, 0.05f, 0.97f, 0.90f);
             _detail = detailPanel.rectTransform;
+
+            BuildTooltip();
+            BuildMovePopup();
         }
 
         private void RebuildList()
@@ -103,62 +116,74 @@ namespace MonsterCatcher.Map.View
             var moves = species.MovesAtLevel(save.Level);
             var mon = new Pokemon(species, save.Level, moves, save.AbilityIds);
 
+            // ---- header (sprite + name / type / level) ----
+            var header = Section(0.0f, 0.86f, 1.0f, 1.0f, null);
             if (species.FrontSprite != null)
             {
-                var sr = NewRect("Sprite", _detail);
-                SetAnchors(sr, 0.03f, 0.80f, 0.19f, 0.98f);
+                var sr = NewRect("Sprite", header);
+                SetAnchors(sr, 0.01f, 0.05f, 0.13f, 0.95f);
                 var img = sr.gameObject.AddComponent<Image>();
                 img.sprite = species.FrontSprite; img.preserveAspect = true; img.raycastTarget = false;
             }
+            string types = species.Type1.ToString() + (species.HasSecondType ? " / " + species.Type2 : "");
+            var head = MakeText(header, 23, TextAnchor.MiddleLeft, Color.white);
+            SetAnchors(head.rectTransform, 0.15f, 0f, 0.98f, 1f);
+            head.text = species.DisplayName + "      " + types + "      Lv." + save.Level;
 
-            string types = species.Type1.ToString() + (species.HasSecondType ? "/" + species.Type2 : "");
-            var head = MakeText(_detail, 22, TextAnchor.UpperLeft, Color.white);
-            SetAnchors(head.rectTransform, 0.21f, 0.87f, 0.98f, 0.99f);
-            head.text = species.DisplayName + "    " + types + "    Lv." + save.Level;
-
-            var lore = MakeText(_detail, 15, TextAnchor.UpperLeft, new Color(0.78f, 0.84f, 0.9f));
-            SetAnchors(lore.rectTransform, 0.21f, 0.73f, 0.98f, 0.87f);
+            // ---- lore ----
+            var loreSec = Section(0.0f, 0.71f, 1.0f, 0.845f, "LORE");
+            var lore = MakeText(loreSec, 15, TextAnchor.UpperLeft, new Color(0.8f, 0.85f, 0.9f));
+            SetAnchors(lore.rectTransform, 0.02f, 0.05f, 0.98f, 0.74f);
             lore.horizontalOverflow = HorizontalWrapMode.Wrap;
             lore.text = species.LoreText;
 
-            var stats = MakeText(_detail, 16, TextAnchor.UpperLeft, Color.white);
-            SetAnchors(stats.rectTransform, 0.03f, 0.48f, 0.50f, 0.72f);
-            stats.text =
-                "HP  " + mon.MaxHp +
-                "\nAtk " + mon.EffectiveStat(Stat.Attack) +
-                "\nDef " + mon.EffectiveStat(Stat.Defense) +
-                "\nSpA " + mon.EffectiveStat(Stat.SpAttack) +
-                "\nSpD " + mon.EffectiveStat(Stat.SpDefense) +
-                "\nSpe " + mon.EffectiveStat(Stat.Speed);
+            // ---- stats (hover for help) ----
+            var statSec = Section(0.0f, 0.37f, 0.49f, 0.695f, "STATS  (hover)");
+            AddStatRow(statSec, 0, "HP", mon.MaxHp, Stat.Hp);
+            AddStatRow(statSec, 1, "Attack", mon.EffectiveStat(Stat.Attack), Stat.Attack);
+            AddStatRow(statSec, 2, "Defense", mon.EffectiveStat(Stat.Defense), Stat.Defense);
+            AddStatRow(statSec, 3, "Sp. Atk", mon.EffectiveStat(Stat.SpAttack), Stat.SpAttack);
+            AddStatRow(statSec, 4, "Sp. Def", mon.EffectiveStat(Stat.SpDefense), Stat.SpDefense);
+            AddStatRow(statSec, 5, "Speed", mon.EffectiveStat(Stat.Speed), Stat.Speed);
 
-            var abilSb = new StringBuilder("Ability");
+            // ---- ability ----
+            var abilSec = Section(0.51f, 0.37f, 1.0f, 0.695f, "ABILITY");
+            var abilSb = new StringBuilder();
             foreach (var id in save.AbilityIds)
             {
                 var info = AbilityCatalog.ById(id);
-                if (info != null) abilSb.Append("\n" + info.Name + "\n  " + info.Description);
+                if (info != null) abilSb.Append((abilSb.Length > 0 ? "\n\n" : "") + info.Name + "\n" + info.Description);
             }
-            var abil = MakeText(_detail, 15, TextAnchor.UpperLeft, new Color(0.96f, 0.86f, 0.5f));
-            SetAnchors(abil.rectTransform, 0.51f, 0.48f, 0.98f, 0.72f);
+            var abil = MakeText(abilSec, 15, TextAnchor.UpperLeft, new Color(0.96f, 0.86f, 0.5f));
+            SetAnchors(abil.rectTransform, 0.04f, 0.05f, 0.97f, 0.74f);
             abil.horizontalOverflow = HorizontalWrapMode.Wrap;
             abil.text = abilSb.ToString();
 
-            var mvSb = new StringBuilder("Moves");
-            foreach (var m in moves)
-                mvSb.Append("\n" + m.DisplayName + " - " + m.Type + "/" + m.Category
-                    + "  Pow " + (m.Power > 0 ? m.Power.ToString() : "-")
-                    + "  Acc " + (m.Accuracy > 0 ? m.Accuracy.ToString() : "-")
-                    + MoveEffectNote(m));
-            var mv = MakeText(_detail, 15, TextAnchor.UpperLeft, new Color(0.85f, 0.9f, 0.95f));
-            SetAnchors(mv.rectTransform, 0.03f, 0.14f, 0.98f, 0.47f);
-            mv.horizontalOverflow = HorizontalWrapMode.Wrap;
-            mv.text = mvSb.ToString();
+            // ---- moves (click for details) ----
+            var moveSec = Section(0.0f, 0.12f, 1.0f, 0.355f, "MOVES  (click for details)");
+            for (int i = 0; i < moves.Count; i++)
+            {
+                var m = moves[i];
+                var btn = MakeButton(moveSec, new Color(0.18f, 0.26f, 0.34f), out var lbl);
+                float top = 0.80f - i * 0.20f;
+                SetAnchors((RectTransform)btn.transform, 0.02f, top - 0.18f, 0.98f, top);
+                lbl.alignment = TextAnchor.MiddleLeft;
+                var rt = (RectTransform)lbl.transform;
+                rt.offsetMin = new Vector2(10f, rt.offsetMin.y);
+                lbl.text = m.DisplayName + "    " + m.Type + "/" + m.Category
+                    + "    Pow " + (m.Power > 0 ? m.Power.ToString() : "-")
+                    + "    Acc " + (m.Accuracy > 0 ? m.Accuracy.ToString() : "-");
+                var move = m;
+                btn.onClick.AddListener(() => ShowMovePopup(move));
+            }
 
+            // ---- release ----
             bool canRelease = roster.Count > 1;
             if (!_confirmingRelease)
             {
                 var rel = MakeButton(_detail,
                     canRelease ? new Color(0.5f, 0.25f, 0.25f) : new Color(0.3f, 0.3f, 0.3f), out var rlbl);
-                SetAnchors((RectTransform)rel.transform, 0.03f, 0.02f, 0.28f, 0.11f);
+                SetAnchors((RectTransform)rel.transform, 0.0f, 0.0f, 0.26f, 0.10f);
                 rlbl.text = "Release";
                 rel.interactable = canRelease;
                 rel.onClick.AddListener(() => { _confirmingRelease = true; RebuildDetail(); });
@@ -166,10 +191,10 @@ namespace MonsterCatcher.Map.View
             else
             {
                 var q = MakeText(_detail, 15, TextAnchor.MiddleLeft, Color.white);
-                SetAnchors(q.rectTransform, 0.03f, 0.02f, 0.40f, 0.11f);
+                SetAnchors(q.rectTransform, 0.0f, 0.0f, 0.40f, 0.10f);
                 q.text = "Release " + species.DisplayName + "?";
                 var yes = MakeButton(_detail, new Color(0.55f, 0.25f, 0.25f), out var ylbl);
-                SetAnchors((RectTransform)yes.transform, 0.42f, 0.02f, 0.57f, 0.11f);
+                SetAnchors((RectTransform)yes.transform, 0.42f, 0.0f, 0.57f, 0.10f);
                 ylbl.text = "Yes";
                 yes.onClick.AddListener(() =>
                 {
@@ -178,29 +203,139 @@ namespace MonsterCatcher.Map.View
                     RebuildList(); RebuildDetail();
                 });
                 var no = MakeButton(_detail, new Color(0.3f, 0.35f, 0.3f), out var nlbl);
-                SetAnchors((RectTransform)no.transform, 0.59f, 0.02f, 0.73f, 0.11f);
+                SetAnchors((RectTransform)no.transform, 0.59f, 0.0f, 0.73f, 0.10f);
                 nlbl.text = "No";
                 no.onClick.AddListener(() => { _confirmingRelease = false; RebuildDetail(); });
             }
         }
 
-        private static string MoveEffectNote(MoveData m)
+        private RectTransform Section(float a, float b, float c, float d, string header)
         {
-            var parts = new List<string>();
-            if (m.ChargesUp) parts.Add("2-turn");
-            if (m.RecoilPercent > 0) parts.Add("recoil " + m.RecoilPercent + "%");
-            if (m.DrainPercent > 0) parts.Add("drain " + m.DrainPercent + "%");
-            if (m.HighCrit) parts.Add("high-crit");
-            if (m.Priority != 0) parts.Add("prio " + m.Priority);
-            if (m.InflictsStatus != StatusCondition.None && m.StatusChance > 0)
-                parts.Add(m.StatusChance + "% " + m.InflictsStatus);
-            if (m.StatStageDelta != 0 && m.StatChangeChance > 0)
-                parts.Add((m.StatChangeTargetsSelf ? "self " : "foe ") + m.StatToChange
-                    + (m.StatStageDelta > 0 ? "+" : "") + m.StatStageDelta);
-            return parts.Count == 0 ? "" : "  [" + string.Join(", ", parts) + "]";
+            var panel = MakePanel(_detail, SectionBg);
+            SetAnchors(panel.rectTransform, a, b, c, d);
+            if (!string.IsNullOrEmpty(header))
+            {
+                var h = MakeText(panel.rectTransform, 12, TextAnchor.UpperLeft, Header);
+                SetAnchors(h.rectTransform, 0.02f, 0.78f, 0.98f, 0.99f);
+                h.text = header;
+            }
+            return panel.rectTransform;
         }
 
-        // ---- factories (mirror MapController) ----
+        private void AddStatRow(RectTransform parent, int i, string name, int value, Stat stat)
+        {
+            var row = MakeText(parent, 15, TextAnchor.MiddleLeft, Color.white);
+            float top = 0.77f - i * 0.125f;
+            SetAnchors(row.rectTransform, 0.04f, top - 0.12f, 0.97f, top);
+            row.raycastTarget = true;   // hoverable
+            row.text = name + "   " + value;
+            AddHover(row.gameObject, () => StatDescription(stat));
+        }
+
+        private static string StatDescription(Stat s)
+        {
+            switch (s)
+            {
+                case Stat.Hp: return "HP - how much damage it can take before fainting.";
+                case Stat.Attack: return "Attack - raises the damage of physical moves.";
+                case Stat.Defense: return "Defense - reduces damage taken from physical moves.";
+                case Stat.SpAttack: return "Sp. Attack - raises the damage of special moves.";
+                case Stat.SpDefense: return "Sp. Defense - reduces damage taken from special moves.";
+                case Stat.Speed: return "Speed - the faster monster moves first each turn.";
+                default: return "";
+            }
+        }
+
+        private static string MoveDescription(MoveData m)
+        {
+            var sb = new StringBuilder();
+            sb.Append(m.Type + " / " + m.Category + "\n");
+            sb.Append("Power: " + (m.Power > 0 ? m.Power.ToString() : "-")
+                + "      Accuracy: " + (m.Accuracy > 0 ? m.Accuracy + "%" : "never misses")
+                + "      PP: " + m.MaxPp);
+            var fx = new List<string>();
+            if (m.Category == MoveCategory.Status) fx.Add("A status move - deals no direct damage.");
+            if (m.ChargesUp) fx.Add("Charges on the first turn, then strikes on the second.");
+            if (m.RecoilPercent > 0) fx.Add("The user takes " + m.RecoilPercent + "% of the damage dealt as recoil.");
+            if (m.DrainPercent > 0) fx.Add("Heals the user for " + m.DrainPercent + "% of the damage dealt.");
+            if (m.HighCrit) fx.Add("Has a high critical-hit ratio.");
+            if (m.Priority > 0) fx.Add("Strikes first (+" + m.Priority + " priority).");
+            if (m.Priority < 0) fx.Add("Strikes last (" + m.Priority + " priority).");
+            if (m.InflictsStatus != StatusCondition.None && m.StatusChance > 0)
+                fx.Add(m.StatusChance + "% chance to inflict " + m.InflictsStatus + ".");
+            if (m.StatStageDelta != 0 && m.StatChangeChance > 0)
+            {
+                string who = m.StatChangeTargetsSelf ? "the user's" : "the target's";
+                string dir = m.StatStageDelta > 0 ? "raises" : "lowers";
+                string chance = m.StatChangeChance >= 100 ? "" : m.StatChangeChance + "% chance to ";
+                fx.Add(chance + dir + " " + who + " " + m.StatToChange + " by " + System.Math.Abs(m.StatStageDelta) + ".");
+            }
+            foreach (var f in fx) sb.Append("\n\n" + f);
+            return sb.ToString();
+        }
+
+        // ---- tooltip (pointer-following) ----
+        private void BuildTooltip()
+        {
+            var p = MakePanel(_canvasRt, new Color(0f, 0f, 0f, 0.93f));
+            _tipRt = p.rectTransform;
+            _tipRt.anchorMin = _tipRt.anchorMax = new Vector2(0.5f, 0.5f);
+            _tipRt.pivot = new Vector2(0f, 1f);
+            _tipRt.sizeDelta = new Vector2(360f, 58f);
+            p.raycastTarget = false;
+            _tipText = MakeText(_tipRt, 14, TextAnchor.MiddleLeft, Color.white);
+            SetAnchors(_tipText.rectTransform, 0.04f, 0.05f, 0.96f, 0.95f);
+            _tipGo = p.gameObject;
+            _tipGo.SetActive(false);
+        }
+
+        private void ShowTip(string text, Vector2 screenPos)
+        {
+            if (string.IsNullOrEmpty(text) || _tipRt == null) return;
+            _tipText.text = text;
+            _tipRt.SetAsLastSibling();
+            if (RectTransformUtility.ScreenPointToLocalPointInRectangle(_canvasRt, screenPos, null, out var local))
+                _tipRt.anchoredPosition = local + new Vector2(14f, -14f);
+            _tipGo.SetActive(true);
+        }
+
+        private void HideTip() { if (_tipGo != null) _tipGo.SetActive(false); }
+
+        private void AddHover(GameObject target, System.Func<string> textProvider)
+        {
+            var et = target.AddComponent<EventTrigger>();
+            var enter = new EventTrigger.Entry { eventID = EventTriggerType.PointerEnter };
+            enter.callback.AddListener(d => ShowTip(textProvider(), ((PointerEventData)d).position));
+            et.triggers.Add(enter);
+            var exit = new EventTrigger.Entry { eventID = EventTriggerType.PointerExit };
+            exit.callback.AddListener(d => HideTip());
+            et.triggers.Add(exit);
+        }
+
+        // ---- move-description popup ----
+        private void BuildMovePopup()
+        {
+            var p = MakePanel(_canvasRt, new Color(0.10f, 0.12f, 0.17f, 0.99f));
+            SetAnchors(p.rectTransform, 0.30f, 0.28f, 0.70f, 0.74f);
+            _movePopupText = MakeText(p.rectTransform, 16, TextAnchor.UpperLeft, Color.white);
+            SetAnchors(_movePopupText.rectTransform, 0.05f, 0.18f, 0.95f, 0.93f);
+            _movePopupText.horizontalOverflow = HorizontalWrapMode.Wrap;
+            var close = MakeButton(p.rectTransform, new Color(0.4f, 0.25f, 0.25f), out var clbl);
+            SetAnchors((RectTransform)close.transform, 0.38f, 0.05f, 0.62f, 0.14f);
+            clbl.text = "Close";
+            close.onClick.AddListener(() => _movePopup.SetActive(false));
+            _movePopup = p.gameObject;
+            _movePopup.SetActive(false);
+        }
+
+        private void ShowMovePopup(MoveData m)
+        {
+            _movePopupText.text = m.DisplayName + "\n\n" + MoveDescription(m);
+            ((RectTransform)_movePopup.transform).SetAsLastSibling();
+            _movePopup.SetActive(true);
+        }
+
+        // ---- factories ----
         private static void ClearChildren(RectTransform rt)
         {
             for (int i = rt.childCount - 1; i >= 0; i--) Destroy(rt.GetChild(i).gameObject);

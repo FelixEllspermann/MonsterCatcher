@@ -151,13 +151,14 @@ namespace MonsterCatcher.Battle
             // Sleep: act on the wake turn.
             if (user.Status == StatusCondition.Sleep)
             {
-                if (user.SleepTurnsLeft > 1)
+                if (user.StatusTurnsLeft > 1)
                 {
-                    user.SleepTurnsLeft--;
+                    user.StatusTurnsLeft--;
                     events.Add(new ActionPreventedEvent(user, StatusCondition.Sleep));
                     return;
                 }
                 user.CureStatus();
+                events.Add(new StatusEndedEvent(user, StatusCondition.Sleep));
                 // woke up; proceeds to act
             }
 
@@ -292,6 +293,18 @@ namespace MonsterCatcher.Battle
                     events.Add(new FaintedEvent(p));
                     CheckBattleEnd(events);
                     return;
+                }
+            }
+
+            // Non-sleep statuses tick down each turn and wear off (sleep is handled on the wake turn).
+            if (p.Status != StatusCondition.None && p.Status != StatusCondition.Sleep)
+            {
+                if (p.StatusTurnsLeft > 1) p.StatusTurnsLeft--;
+                else
+                {
+                    var ended = p.Status;
+                    p.CureStatus();
+                    events.Add(new StatusEndedEvent(p, ended));
                 }
             }
 

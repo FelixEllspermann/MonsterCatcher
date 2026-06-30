@@ -29,6 +29,13 @@ namespace MonsterCatcher.Battle
         { Target = target; Status = status; }
     }
 
+    public sealed class StatusEndedEvent : BattleEvent
+    {
+        public readonly Pokemon Target; public readonly StatusCondition Status;
+        public StatusEndedEvent(Pokemon target, StatusCondition status)
+        { Target = target; Status = status; }
+    }
+
     public sealed class StatusDamageEvent : BattleEvent
     {
         public readonly Pokemon Target; public readonly StatusCondition Status; public readonly int Amount;
