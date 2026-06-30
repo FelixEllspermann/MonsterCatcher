@@ -66,11 +66,26 @@ namespace MonsterCatcher.Battle
 
         private static Party BuildEnemy(BattleSettings settings)
         {
-            var species = Resources.Load<SpeciesData>("Species/" + RunState.PendingEnemySpecies());
             int level = RunState.PendingEnemyLevel();
-            var ability = AbilityCatalog.RollId(RunState.PendingNodeId * 31 + RunState.Tier * 101 + 7);
-            var e = new Pokemon(species, level, MovesFor(species, level), new[] { ability });
-            return new Party(BattleSide.Enemy, new List<Pokemon> { e }, settings.MaxPartySize);
+            var mons = new List<Pokemon>();
+            if (RunState.IsBossBattle())
+            {
+                int n = RunState.BossPartySize();
+                for (int i = 0; i < n; i++)
+                {
+                    var sp = Resources.Load<SpeciesData>("Species/" + RunState.BossEnemySpecies(i));
+                    if (sp == null) continue;
+                    var ab = AbilityCatalog.RollId(RunState.PendingNodeId * 31 + RunState.Tier * 101 + 7 + i * 13);
+                    mons.Add(new Pokemon(sp, level, MovesFor(sp, level), new[] { ab }));
+                }
+            }
+            else
+            {
+                var sp = Resources.Load<SpeciesData>("Species/" + RunState.PendingEnemySpecies());
+                var ab = AbilityCatalog.RollId(RunState.PendingNodeId * 31 + RunState.Tier * 101 + 7);
+                mons.Add(new Pokemon(sp, level, MovesFor(sp, level), new[] { ab }));
+            }
+            return new Party(BattleSide.Enemy, mons, System.Math.Max(settings.MaxPartySize, mons.Count));
         }
 
         private static List<MoveData> MovesFor(SpeciesData species, int level)

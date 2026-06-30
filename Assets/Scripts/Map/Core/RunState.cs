@@ -69,6 +69,16 @@ namespace MonsterCatcher.Map
         public static string EnemySpeciesFor(NodeType type, int row, int nodeId, int tier) =>
             EnemyLines[EnemyElement(nodeId, tier)][StageForRow(type, row)];
 
+        // Boss battles field a team: 3 monsters at tier 1, +1 per tier, capped at the roster max (6).
+        public static int BossPartySize() => Math.Min(MaxRoster, 2 + Tier);
+
+        // The i-th boss monster: a final-stage species, cycling through the lines for variety.
+        public static string BossEnemySpecies(int index)
+        {
+            int line = ((index % EnemyLines.Length) + EnemyLines.Length) % EnemyLines.Length;
+            return EnemyLines[line][2];
+        }
+
         public static void RollStarterAbility(MonsterSave save, int seed)
         {
             if (save.AbilityIds.Count == 0)
