@@ -17,6 +17,7 @@ namespace MonsterCatcher.Map.View
         private Text _title;
         private readonly Dictionary<int, Button> _nodeButtons = new Dictionary<int, Button>();
         private readonly Dictionary<int, Image> _nodeImages = new Dictionary<int, Image>();
+        private MonsterView _monsterView;
 
         private void Start()
         {
@@ -56,8 +57,13 @@ namespace MonsterCatcher.Map.View
             Stretch(bg.rectTransform);
 
             _title = MakeText(canvasRt, 26, TextAnchor.MiddleCenter, Color.white);
-            SetAnchors(_title.rectTransform, 0.04f, 0.93f, 0.96f, 0.99f);
+            SetAnchors(_title.rectTransform, 0.18f, 0.93f, 0.82f, 0.99f);
             _title.text = "Tier " + RunState.Tier + "  -  reach the BOSS";
+
+            var monstersBtn = MakeButton(canvasRt, new Color(0.25f, 0.42f, 0.55f), out var mlbl);
+            SetAnchors((RectTransform)monstersBtn.transform, 0.02f, 0.93f, 0.16f, 0.99f);
+            mlbl.text = "Monsters";
+            monstersBtn.onClick.AddListener(OpenMonsterView);
 
             var container = MakePanel(canvasRt, new Color(0f, 0f, 0f, 0f));
             var crt = container.rectTransform;
@@ -143,6 +149,12 @@ namespace MonsterCatcher.Map.View
                 case NodeStatus.Cleared: return new Color(0.32f, 0.45f, 0.62f);
                 default: return new Color(0.22f, 0.24f, 0.28f);
             }
+        }
+
+        private void OpenMonsterView()
+        {
+            if (_monsterView == null) _monsterView = new GameObject("MonsterView").AddComponent<MonsterView>();
+            _monsterView.Toggle();
         }
 
         private void OnNodeClicked(int id)
