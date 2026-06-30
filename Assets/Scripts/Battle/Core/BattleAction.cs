@@ -1,6 +1,6 @@
 namespace MonsterCatcher.Battle
 {
-    public enum ActionKind { Move, Switch }
+    public enum ActionKind { Move, Switch, Pass }
 
     public struct BattleAction
     {
@@ -15,6 +15,12 @@ namespace MonsterCatcher.Battle
         public static BattleAction SwitchTo(int partyIndex)
         {
             return new BattleAction { Kind = ActionKind.Switch, Index = partyIndex };
+        }
+
+        // The actor does nothing this turn (e.g. it used an item); the opponent still acts.
+        public static BattleAction Pass()
+        {
+            return new BattleAction { Kind = ActionKind.Pass, Index = -1 };
         }
     }
 }

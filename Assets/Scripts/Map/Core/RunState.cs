@@ -35,6 +35,9 @@ namespace MonsterCatcher.Map
         public static readonly HashSet<int> Cleared = new HashSet<int>();
         public static List<MonsterSave> PlayerRoster = new List<MonsterSave>();
         public static int Tier = 1;
+        public const int MaxRoster = 6;
+        public static Dictionary<string, int> Inventory = new Dictionary<string, int>();
+        public static int Gold;
 
         // The starter is one random first-stage monster; all six can appear as enemies.
         public static readonly string[] Starters = { "Mossprig", "Cindrop", "Voltwig", "Lunakit" };
@@ -86,6 +89,8 @@ namespace MonsterCatcher.Map
                 new MonsterSave(StarterFor(seed), StarterLevel),
             };
             RollStarterAbility(PlayerRoster[0], seed ^ 0x5f3759df);
+            Inventory = new Dictionary<string, int> { { "MonsterCatcher", 3 }, { "Potion", 2 }, { "Remedy", 1 } };
+            Gold = 0;
             Tier = 1;
             InRun = true;
         }
@@ -197,6 +202,33 @@ namespace MonsterCatcher.Map
             if (PlayerRoster.Count <= 1) return false;
             if (index < 0 || index >= PlayerRoster.Count) return false;
             PlayerRoster.RemoveAt(index);
+            return true;
+        }
+
+        // ---- inventory & gold ----------------------------------------------------
+        public static int ItemCount(string id) => Inventory.TryGetValue(id, out var n) ? n : 0;
+
+        public static void AddItem(string id, int n)
+        {
+            if (n <= 0) return;
+            Inventory[id] = ItemCount(id) + n;
+        }
+
+        public static bool RemoveItem(string id, int n)
+        {
+            int have = ItemCount(id);
+            if (n <= 0 || have < n) return false;
+            int left = have - n;
+            if (left > 0) Inventory[id] = left; else Inventory.Remove(id);
+            return true;
+        }
+
+        public static void AddGold(int n) { if (n > 0) Gold += n; }
+
+        public static bool TrySpendGold(int n)
+        {
+            if (n < 0 || Gold < n) return false;
+            Gold -= n;
             return true;
         }
     }

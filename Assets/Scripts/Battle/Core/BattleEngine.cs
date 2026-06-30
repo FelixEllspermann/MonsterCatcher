@@ -94,6 +94,10 @@ namespace MonsterCatcher.Battle
                     events.Add(new SwitchedInEvent(side, party.Active));
                 }
             }
+            else if (action.Kind == ActionKind.Pass)
+            {
+                // The side does nothing this turn (used an item); the opponent still acts.
+            }
             else
             {
                 pending.Add((side, action));

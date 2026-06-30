@@ -29,6 +29,30 @@ namespace MonsterCatcher.Battle
         { Target = target; Status = status; }
     }
 
+    public sealed class ItemUsedEvent : BattleEvent
+    {
+        public readonly string Message;
+        public ItemUsedEvent(string message) { Message = message; }
+    }
+
+    public sealed class HealedEvent : BattleEvent
+    {
+        public readonly Pokemon Target; public readonly int Amount;
+        public HealedEvent(Pokemon target, int amount) { Target = target; Amount = amount; }
+    }
+
+    public sealed class CaughtEvent : BattleEvent
+    {
+        public readonly Pokemon Target;
+        public CaughtEvent(Pokemon target) { Target = target; }
+    }
+
+    public sealed class BrokeFreeEvent : BattleEvent
+    {
+        public readonly Pokemon Target;
+        public BrokeFreeEvent(Pokemon target) { Target = target; }
+    }
+
     public sealed class StatusEndedEvent : BattleEvent
     {
         public readonly Pokemon Target; public readonly StatusCondition Status;

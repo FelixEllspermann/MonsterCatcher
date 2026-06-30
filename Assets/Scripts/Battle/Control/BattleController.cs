@@ -90,7 +90,11 @@ namespace MonsterCatcher.Battle
                 participated[i] = _player.Members[i].Participated;
                 RunState.WriteBackHp(i, _player.Members[i].CurrentHp);
             }
-            if (won) RunState.ApplyWin(participated);
+            if (won)
+            {
+                RunState.ApplyWin(participated);
+                RunState.AddGold(5 + 3 * RunState.PendingEnemyLevel());
+            }
             ComputePendingEvolutions(won);
             RunState.ReportBattleResult(won);
         }
@@ -123,6 +127,76 @@ namespace MonsterCatcher.Battle
 
         public void PlayerUseMove(int moveIndex) => ResolveTurn(BattleAction.UseMove(moveIndex));
         public void PlayerSwitch(int partyIndex) => ResolveTurn(BattleAction.SwitchTo(partyIndex));
+
+        // Use a held item. Healing/buff/revive cost the turn (the enemy acts); a failed use is
+        // rejected with a message and no turn. (Monster Catcher is wired in Phase 2.)
+        public void UseItem(string itemId)
+        {
+            if (_engine == null || _engine.IsOver) return;
+            if (_engine.AwaitingForcedSwitch(BattleSide.Player)) return;
+            if (RunState.ItemCount(itemId) <= 0) return;
+
+            var active = _engine.Player.Active;
+            var pre = new List<BattleEvent>();
+            if (!ApplyItemEffect(itemId, active, pre))
+            {
+                TurnResolved?.Invoke(pre);   // rejected — message only, no turn spent
+                return;
+            }
+            RunState.RemoveItem(itemId, 1);
+
+            var enemyAction = _ai.ChooseAction(_enemy, _player);
+            var events = new List<BattleEvent>(pre);
+            events.AddRange(_engine.ExecuteTurn(BattleAction.Pass(), enemyAction));
+            if (_engine.AwaitingForcedSwitch(BattleSide.Enemy))
+            {
+                int idx = _enemy.FirstUsableIndex();
+                events.AddRange(_engine.ResolveForcedSwitch(BattleSide.Enemy, idx));
+            }
+            ApplyRunResultIfOver();
+            TurnResolved?.Invoke(events);
+        }
+
+        private bool ApplyItemEffect(string itemId, Pokemon active, List<BattleEvent> events)
+        {
+            switch (itemId)
+            {
+                case "Potion":
+                    if (active.CurrentHp >= active.MaxHp)
+                    { events.Add(new ItemUsedEvent(active.Species.DisplayName + " is already at full HP.")); return false; }
+                    int before = active.CurrentHp;
+                    active.Heal(active.MaxHp / 2);
+                    events.Add(new ItemUsedEvent("Used a Potion."));
+                    events.Add(new HealedEvent(active, active.CurrentHp - before));
+                    return true;
+                case "Remedy":
+                    if (active.Status == StatusCondition.None)
+                    { events.Add(new ItemUsedEvent(active.Species.DisplayName + " has no status to cure.")); return false; }
+                    active.CureStatus();
+                    events.Add(new ItemUsedEvent(active.Species.DisplayName + "'s status was cured."));
+                    return true;
+                case "XAttack":
+                    active.ChangeStage(Stat.Attack, 1);
+                    events.Add(new ItemUsedEvent(active.Species.DisplayName + "'s Attack rose!"));
+                    return true;
+                case "Revive":
+                    var ko = FirstFaintedMember();
+                    if (ko == null)
+                    { events.Add(new ItemUsedEvent("No fainted team member to revive.")); return false; }
+                    ko.SetCurrentHp(ko.MaxHp / 2);
+                    events.Add(new ItemUsedEvent(ko.Species.DisplayName + " was revived!"));
+                    return true;
+                default:
+                    events.Add(new ItemUsedEvent("You can't use that here."));
+                    return false;
+            }
+        }
+
+        private Pokemon FirstFaintedMember()
+        {
+            foreach (var m in _player.Members) if (m.IsFainted) return m;
+            return null;
+        }
 
         private void ResolveTurn(BattleAction playerAction)
         {

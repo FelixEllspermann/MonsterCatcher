@@ -50,6 +50,9 @@ namespace MonsterCatcher.Battle.View
         private readonly List<Button> _partyButtons = new List<Button>();
         private readonly List<Text> _partyLabels = new List<Text>();
         private Button _switchBack;
+        private readonly List<Button> _itemButtons = new List<Button>();
+        private readonly List<Text> _itemLabels = new List<Text>();
+        private readonly List<string> _itemSlotIds = new List<string>();
 
         private MenuState _menuState;
         private bool _isPlaying;
@@ -231,6 +234,7 @@ namespace MonsterCatcher.Battle.View
                 case SwitchedInEvent si: SwitchPanel(si.Side, si.Pokemon); break;
                 case StatusInflictedEvent sie: UpdatePanel(SideOf(sie.Target)); break;
                 case StatusEndedEvent see: UpdatePanel(SideOf(see.Target)); break;
+                case HealedEvent he: AdjustHp(he.Target, he.Amount); break;
             }
         }
 
@@ -340,6 +344,7 @@ namespace MonsterCatcher.Battle.View
 
             if (s == MenuState.Attack) RefreshAttackMenu();
             if (s == MenuState.Switch) RefreshSwitchMenu();
+            if (s == MenuState.Items) RefreshItemsMenu();
 
             var p = eng.Player.Active;
             switch (s)
@@ -347,7 +352,7 @@ namespace MonsterCatcher.Battle.View
                 case MenuState.Main: _message.text = "What will " + p.Species.DisplayName + " do?"; break;
                 case MenuState.Attack: _message.text = "Choose a move."; break;
                 case MenuState.Switch: _message.text = forced ? "Choose your next Pokemon!" : "Switch to which Pokemon?"; break;
-                case MenuState.Items: _message.text = "You have no items yet."; break;
+                case MenuState.Items: _message.text = "Use which item?"; break;
             }
         }
 
@@ -379,6 +384,34 @@ namespace MonsterCatcher.Battle.View
                 _partyLabels[i].text = m.Species.DisplayName + "\n" + m.CurrentHp + "/" + m.MaxHp + (m.IsFainted ? "  (KO)" : "");
                 _partyButtons[i].interactable = party.CanSwitchTo(i);
             }
+        }
+
+        private void RefreshItemsMenu()
+        {
+            _itemSlotIds.Clear();
+            foreach (var info in ItemCatalog.All)
+                if (RunState.ItemCount(info.Id) > 0) _itemSlotIds.Add(info.Id);
+            for (int i = 0; i < _itemButtons.Count; i++)
+            {
+                if (i < _itemSlotIds.Count)
+                {
+                    var info = ItemCatalog.ById(_itemSlotIds[i]);
+                    _itemButtons[i].gameObject.SetActive(true);
+                    _itemLabels[i].text = info.Name + "\nx" + RunState.ItemCount(info.Id);
+                    _itemButtons[i].interactable = true;
+                }
+                else _itemButtons[i].gameObject.SetActive(false);
+            }
+        }
+
+        private void OnItemSlotClicked(int slot)
+        {
+            if (_isPlaying) return;
+            if (slot < 0 || slot >= _itemSlotIds.Count) return;
+            var eng = _controller.Engine;
+            if (eng.IsOver || eng.AwaitingForcedSwitch(BattleSide.Player)) return;
+            SnapshotHp();
+            _controller.UseItem(_itemSlotIds[slot]);
         }
 
         // ---- Text helpers --------------------------------------------------
@@ -418,6 +451,10 @@ namespace MonsterCatcher.Battle.View
                            + (d.WasCritical ? " (a critical hit!)" : "") + "." + EffNote(d.Effectiveness);
                 case StatusInflictedEvent s: return s.Target.Species.DisplayName + " was afflicted by " + s.Status + "!";
                 case StatusEndedEvent se: return se.Target.Species.DisplayName + (se.Status == StatusCondition.Sleep ? " woke up!" : "'s " + se.Status + " wore off!");
+                case ItemUsedEvent iu: return iu.Message;
+                case HealedEvent hv: return hv.Target.Species.DisplayName + " recovered " + hv.Amount + " HP!";
+                case CaughtEvent ce2: return "Gotcha! " + ce2.Target.Species.DisplayName + " was caught!";
+                case BrokeFreeEvent bf: return "Oh no! " + bf.Target.Species.DisplayName + " broke free!";
                 case StatusDamageEvent sd: return sd.Target.Species.DisplayName + " is hurt by " + sd.Status + "!";
                 case StatChangedEvent sc:
                     return sc.Target.Species.DisplayName + "'s " + sc.Stat + (sc.DeltaStages > 0 ? " rose!" : " fell!");
@@ -607,9 +644,14 @@ namespace MonsterCatcher.Battle.View
             _switchBack.onClick.AddListener(() => { if (!_isPlaying) ShowMenu(MenuState.Main); });
 
             _itemsMenu = MakeRow(canvasRt);
-            var noItems = MakeButton(_itemsMenu.transform, new Color(0.25f, 0.25f, 0.25f, 1f), out var noItemsLbl);
-            noItemsLbl.text = "(no items yet)";
-            noItems.interactable = false;
+            for (int i = 0; i < 5; i++)
+            {
+                int idx = i;
+                var ibtn = MakeButton(_itemsMenu.transform, new Color(0.2f, 0.38f, 0.32f, 1f), out var ilbl);
+                ibtn.onClick.AddListener(() => OnItemSlotClicked(idx));
+                _itemButtons.Add(ibtn);
+                _itemLabels.Add(ilbl);
+            }
             var itBack = MakeButton(_itemsMenu.transform, ColBack, out var itBackLbl);
             itBackLbl.text = "Back";
             itBack.onClick.AddListener(() => { if (!_isPlaying) ShowMenu(MenuState.Main); });
