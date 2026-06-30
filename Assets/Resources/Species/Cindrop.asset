@@ -24,6 +24,8 @@ MonoBehaviour:
   BaseSpeed: 95
   FrontSprite: {fileID: -1630930704791848325, guid: ab390d754a3171545804275fd998c5c9, type: 3}
   BackSprite: {fileID: 2941192997509786101, guid: f0663e940c51252419ed8341af9bd240, type: 3}
+  LoreText: A living ember that never cools, hopping between dry leaves and leaving
+    tiny scorch-prints.
   EvolvesInto: {fileID: 11400000, guid: 5f82c9e8e8bb9c44aac13c37978d9c83, type: 2}
   EvolveLevel: 16
   LearnableMoves: []

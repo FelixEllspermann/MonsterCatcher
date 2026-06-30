@@ -24,6 +24,8 @@ MonoBehaviour:
   BaseSpeed: 95
   FrontSprite: {fileID: -1117830891558774097, guid: df249b3960315694398086b689739a83, type: 3}
   BackSprite: {fileID: -5362105598765443799, guid: d616853f069c63045b60b9fc8c53c276, type: 3}
+  LoreText: An ancient grove-guardian whose bark records centuries of seasons and
+    whose roots quiet any storm.
   EvolvesInto: {fileID: 0}
   EvolveLevel: 0
   LearnableMoves: []

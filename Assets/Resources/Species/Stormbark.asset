@@ -24,6 +24,7 @@ MonoBehaviour:
   BaseSpeed: 115
   FrontSprite: {fileID: 1145522800122134375, guid: f390f22d709f4e547b865243fcc84c7c, type: 3}
   BackSprite: {fileID: -4201587486466002368, guid: 83105189818b22a41a119cb7f033a79a, type: 3}
+  LoreText: It gallops ahead of thunderstorms, daring the lightning to keep pace.
   EvolvesInto: {fileID: 11400000, guid: 2c05a58565ba6404dbe9277bc1546cca, type: 2}
   EvolveLevel: 34
   LearnableMoves: []

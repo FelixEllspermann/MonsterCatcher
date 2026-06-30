@@ -190,5 +190,14 @@ namespace MonsterCatcher.Map
             CurrentNodeId = id;
             return true;
         }
+
+        // Release a roster monster (only when more than one remains).
+        public static bool ReleaseMonster(int index)
+        {
+            if (PlayerRoster.Count <= 1) return false;
+            if (index < 0 || index >= PlayerRoster.Count) return false;
+            PlayerRoster.RemoveAt(index);
+            return true;
+        }
     }
 }

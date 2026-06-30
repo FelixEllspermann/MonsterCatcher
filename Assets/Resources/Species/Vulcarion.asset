@@ -24,6 +24,8 @@ MonoBehaviour:
   BaseSpeed: 135
   FrontSprite: {fileID: -5831337939779836603, guid: 18cc90daea8cdb7458cda53a6ecc2e8f, type: 3}
   BackSprite: {fileID: -7468488561018851369, guid: e75186af8396e854aba19a68d89b3fb4, type: 3}
+  LoreText: A walking eruption - when its core flares, distant skies turn red with
+    falling ash.
   EvolvesInto: {fileID: 0}
   EvolveLevel: 0
   LearnableMoves: []

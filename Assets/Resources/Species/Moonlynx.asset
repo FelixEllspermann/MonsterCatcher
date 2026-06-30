@@ -24,6 +24,8 @@ MonoBehaviour:
   BaseSpeed: 105
   FrontSprite: {fileID: -6932532622951620154, guid: 83f595dbc5e18bd48a65b6d6f56e0959, type: 3}
   BackSprite: {fileID: -6518461574597225185, guid: 18c7d9b20ee56444fb7852cd0f219005, type: 3}
+  LoreText: Eyes like twin moons see through any deception; it hunts only under a
+    clouded sky.
   EvolvesInto: {fileID: 11400000, guid: b4b8bdd5da3b8ff4cb60d25fa9c884e1, type: 2}
   EvolveLevel: 34
   LearnableMoves: []

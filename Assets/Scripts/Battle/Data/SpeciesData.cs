@@ -22,6 +22,9 @@ namespace MonsterCatcher.Battle
         public Sprite FrontSprite;
         public Sprite BackSprite;
 
+        [Header("Lore")]
+        [TextArea] public string LoreText;
+
         [Header("Evolution")]
         public SpeciesData EvolvesInto;
         [Min(0)] public int EvolveLevel;

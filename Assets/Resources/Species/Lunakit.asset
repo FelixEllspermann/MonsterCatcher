@@ -24,6 +24,7 @@ MonoBehaviour:
   BaseSpeed: 70
   FrontSprite: {fileID: 6169317810585252238, guid: c8aa25d38c1c1394f8b2e0704178de88, type: 3}
   BackSprite: {fileID: 2565426890319852287, guid: a08636f69930ec04299e4601eaa0d07c, type: 3}
+  LoreText: A moon-touched kit that slips between shadows and the soft light of dusk.
   EvolvesInto: {fileID: 11400000, guid: b2ba68c0f7f183e4a92cfe0972382543, type: 2}
   EvolveLevel: 16
   LearnableMoves: []

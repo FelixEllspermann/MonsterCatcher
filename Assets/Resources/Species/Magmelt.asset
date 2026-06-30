@@ -24,6 +24,8 @@ MonoBehaviour:
   BaseSpeed: 120
   FrontSprite: {fileID: -4947981877338920108, guid: 93f80cc32ac7bcf409fd18b2c572c897, type: 3}
   BackSprite: {fileID: -7624791152750232473, guid: b2318d8ef20ee5d42803918ef56c90f2, type: 3}
+  LoreText: Molten veins glow brighter as it grows angry; it melts footholds straight
+    into solid rock.
   EvolvesInto: {fileID: 11400000, guid: 7a05c1a23e330b6489e2e394d02ec71d, type: 2}
   EvolveLevel: 34
   LearnableMoves: []

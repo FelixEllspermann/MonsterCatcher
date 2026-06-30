@@ -24,6 +24,8 @@ MonoBehaviour:
   BaseSpeed: 60
   FrontSprite: {fileID: -4871744745249162990, guid: 32ab1001a124d1e45a53475e4621dcfa, type: 3}
   BackSprite: {fileID: -6959106274839564057, guid: b8d100c3dbfcb0c45a8d1e2d019acad0, type: 3}
+  LoreText: A sprout-tailed forest sprite that bonds with mossy roots to sense danger
+    long before it arrives.
   EvolvesInto: {fileID: 11400000, guid: a7e5aa27dea6c1f4f83dd457f235f68a, type: 2}
   EvolveLevel: 16
   LearnableMoves: []

@@ -24,6 +24,8 @@ MonoBehaviour:
   BaseSpeed: 90
   FrontSprite: {fileID: 4505114732939201816, guid: 0e8190ab60ce81f45a656e38d6d909f4, type: 3}
   BackSprite: {fileID: -6979227476178406459, guid: 8c354e2e167aa4f48972469176ed11cc, type: 3}
+  LoreText: A bristly spark-pup; static clings to its fur and snaps at anything that
+    comes too close.
   EvolvesInto: {fileID: 11400000, guid: 0d599d347f5b50f49988239e1ddf63d8, type: 2}
   EvolveLevel: 16
   LearnableMoves: []

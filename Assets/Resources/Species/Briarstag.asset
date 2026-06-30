@@ -24,6 +24,8 @@ MonoBehaviour:
   BaseSpeed: 80
   FrontSprite: {fileID: 9138531539801171296, guid: be61c253b77ba7f42a390fa95e5e1653, type: 3}
   BackSprite: {fileID: 5533121522687238551, guid: 240c6ca60e44fcc42b27e3184e4c6b28, type: 3}
+  LoreText: Its thorned antlers brew healing sap from sunlight; herds are said to
+    regrow whole groves overnight.
   EvolvesInto: {fileID: 11400000, guid: 3d553521746b3b04fab23bace736e322, type: 2}
   EvolveLevel: 34
   LearnableMoves: []
