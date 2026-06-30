@@ -398,7 +398,8 @@ namespace MonsterCatcher.Battle.View
                     var info = ItemCatalog.ById(_itemSlotIds[i]);
                     _itemButtons[i].gameObject.SetActive(true);
                     _itemLabels[i].text = info.Name + "\nx" + RunState.ItemCount(info.Id);
-                    _itemButtons[i].interactable = true;
+                    _itemButtons[i].interactable = info.Id != "MonsterCatcher"
+                        || (!RunState.IsBossBattle() && RunState.PlayerRoster.Count < RunState.MaxRoster);
                 }
                 else _itemButtons[i].gameObject.SetActive(false);
             }

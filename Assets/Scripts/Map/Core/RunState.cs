@@ -147,6 +147,9 @@ namespace MonsterCatcher.Map
             return NodeStatus.Locked;
         }
 
+        public static bool IsBossBattle() =>
+            Map != null && PendingNodeId >= 0 && Map.Get(PendingNodeId).Type == NodeType.Boss;
+
         public static int PendingEnemyLevel()
         {
             if (Map == null || PendingNodeId < 0) return 5;

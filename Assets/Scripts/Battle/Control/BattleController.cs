@@ -23,6 +23,7 @@ namespace MonsterCatcher.Battle
         private Party _player;
         private Party _enemy;
         private bool _runResultApplied;
+        private IRng _rng;
 
         public event Action<IReadOnlyList<BattleEvent>> TurnResolved;
         public BattleEngine Engine => _engine;
@@ -44,8 +45,8 @@ namespace MonsterCatcher.Battle
                 _enemy = SampleData.CreateEnemyParty(settings);
             }
             _ai = new SimpleAI();
-            IRng rng = _rngSeed != 0 ? new DefaultRng(_rngSeed) : new DefaultRng();
-            _engine = new BattleEngine(_player, _enemy, settings, rng);
+            _rng = _rngSeed != 0 ? new DefaultRng(_rngSeed) : new DefaultRng();
+            _engine = new BattleEngine(_player, _enemy, settings, _rng);
             _runResultApplied = false;
         }
 
@@ -136,6 +137,8 @@ namespace MonsterCatcher.Battle
             if (_engine.AwaitingForcedSwitch(BattleSide.Player)) return;
             if (RunState.ItemCount(itemId) <= 0) return;
 
+            if (itemId == "MonsterCatcher") { UseMonsterCatcher(); return; }
+
             var active = _engine.Player.Active;
             var pre = new List<BattleEvent>();
             if (!ApplyItemEffect(itemId, active, pre))
@@ -196,6 +199,50 @@ namespace MonsterCatcher.Battle
         {
             foreach (var m in _player.Members) if (m.IsFainted) return m;
             return null;
+        }
+
+        private void UseMonsterCatcher()
+        {
+            var enemy = _engine.Enemy.Active;
+            var events = new List<BattleEvent>();
+            if (RunState.IsBossBattle())
+            { events.Add(new ItemUsedEvent("You can't catch a boss!")); TurnResolved?.Invoke(events); return; }
+            if (RunState.PlayerRoster.Count >= RunState.MaxRoster)
+            { events.Add(new ItemUsedEvent("Your team is full! Release a monster first.")); TurnResolved?.Invoke(events); return; }
+
+            RunState.RemoveItem("MonsterCatcher", 1);
+            events.Add(new ItemUsedEvent("You threw a Monster Catcher!"));
+
+            if (_rng.Roll(CatchCalculator.Chance(enemy)))
+            {
+                _engine.EndBattle(BattleResult.PlayerWon);
+                events.Add(new CaughtEvent(enemy));
+                ApplyRunResultIfOver();      // gold / leveling / evolution for the current team
+                AddCaughtToRoster(enemy);     // then add the catch (so it doesn't earn this win's XP)
+                TurnResolved?.Invoke(events);
+            }
+            else
+            {
+                events.Add(new BrokeFreeEvent(enemy));
+                var enemyAction = _ai.ChooseAction(_enemy, _player);
+                events.AddRange(_engine.ExecuteTurn(BattleAction.Pass(), enemyAction));
+                if (_engine.AwaitingForcedSwitch(BattleSide.Enemy))
+                {
+                    int idx = _enemy.FirstUsableIndex();
+                    events.AddRange(_engine.ResolveForcedSwitch(BattleSide.Enemy, idx));
+                }
+                ApplyRunResultIfOver();
+                TurnResolved?.Invoke(events);
+            }
+        }
+
+        private void AddCaughtToRoster(Pokemon enemy)
+        {
+            if (RunState.PlayerRoster.Count >= RunState.MaxRoster) return;
+            var save = new MonsterSave(enemy.Species.name, enemy.Level);
+            save.AbilityIds = new List<string>(enemy.AbilityIds);
+            save.CurrentHp = enemy.CurrentHp;
+            RunState.PlayerRoster.Add(save);
         }
 
         private void ResolveTurn(BattleAction playerAction)

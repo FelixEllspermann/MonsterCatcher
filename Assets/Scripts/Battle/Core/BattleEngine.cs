@@ -28,6 +28,12 @@ namespace MonsterCatcher.Battle
 
         public bool AwaitingForcedSwitch(BattleSide side) => _forcedSwitch[(int)side];
 
+        // Force the battle to end (e.g. the wild enemy was caught — it isn't fainted, but the fight is over).
+        public void EndBattle(BattleResult result)
+        {
+            if (!IsOver) Result = result;
+        }
+
         private Party PartyOf(BattleSide side) => side == BattleSide.Player ? Player : Enemy;
         private Party OpponentOf(BattleSide side) => side == BattleSide.Player ? Enemy : Player;
 
