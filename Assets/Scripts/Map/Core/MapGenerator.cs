@@ -5,12 +5,13 @@ namespace MonsterCatcher.Map
 {
     public static class MapGenerator
     {
-        public const int Floors = 8;
+        public const int Floors = 20;
         public const int MinPerFloor = 2;
         public const int MaxPerFloor = 5;
         public const double BranchChance = 0.4;
         public const double HealChance = 0.1;
         public const double ShopChance = 0.1;
+        public const double EventChance = 0.30;
 
         public static MapModel Generate(int seed)
         {
@@ -28,11 +29,16 @@ namespace MonsterCatcher.Map
             {
                 int count = rng.Next(MinPerFloor, MaxPerFloor + 1);
                 var rowNodes = new List<MapNode>();
+                int eventIndex = (f >= 2 && rng.NextDouble() < EventChance) ? rng.Next(count) : -1;
                 for (int i = 0; i < count; i++)
                 {
                     float x = (i + 0.5f) / count;
                     var type = NodeType.Battle;
-                    if (f >= 2)
+                    if (i == eventIndex)
+                    {
+                        type = NodeType.Event;
+                    }
+                    else if (f >= 2)
                     {
                         double r = rng.NextDouble();
                         if (r < HealChance) type = NodeType.Heal;

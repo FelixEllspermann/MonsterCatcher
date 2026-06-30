@@ -23,7 +23,7 @@ namespace MonsterCatcher.Map
     public static class RunState
     {
         public const float BenchShare = 0.5f;
-        public const int BossLevel = 10;
+        public static readonly int BossLevel = MapGenerator.Floors + 2;
         public const int StarterLevel = 5;   // the player's starter begins here
 
         public static bool InRun;
@@ -35,7 +35,7 @@ namespace MonsterCatcher.Map
         public static readonly HashSet<int> Cleared = new HashSet<int>();
         public static List<MonsterSave> PlayerRoster = new List<MonsterSave>();
         public static int Tier = 1;
-        public const int MaxRoster = 6;
+        public static int MaxRoster = 6;
         public static Dictionary<string, int> Inventory = new Dictionary<string, int>();
         public static int Gold;
 
@@ -55,8 +55,8 @@ namespace MonsterCatcher.Map
         public static int StageForRow(NodeType type, int row)
         {
             if (type == NodeType.Boss) return 2;
-            if (row <= 3) return 0;
-            if (row <= 6) return 1;
+            if (row <= MapGenerator.Floors / 3) return 0;
+            if (row <= 2 * MapGenerator.Floors / 3) return 1;
             return 2;
         }
 
@@ -102,6 +102,7 @@ namespace MonsterCatcher.Map
             Inventory = new Dictionary<string, int> { { "MonsterCatcher", 3 }, { "Potion", 2 }, { "Antidote", 1 } };
             Gold = 0;
             Tier = 1;
+            MaxRoster = 6;
             InRun = true;
         }
 
@@ -160,12 +161,17 @@ namespace MonsterCatcher.Map
         public static bool IsBossBattle() =>
             Map != null && PendingNodeId >= 0 && Map.Get(PendingNodeId).Type == NodeType.Boss;
 
+        public static int EnemyLevelFor(NodeType type, int row, int tier)
+        {
+            int tierBase = (tier - 1) * BossLevel;
+            return tierBase + (type == NodeType.Boss ? BossLevel : row);
+        }
+
         public static int PendingEnemyLevel()
         {
             if (Map == null || PendingNodeId < 0) return 5;
             var node = Map.Get(PendingNodeId);
-            int tierBase = (Tier - 1) * BossLevel;
-            return tierBase + (node.Type == NodeType.Boss ? BossLevel : node.Row);
+            return EnemyLevelFor(node.Type, node.Row, Tier);
         }
 
         public static string PendingEnemySpecies()
@@ -215,6 +221,62 @@ namespace MonsterCatcher.Map
             Cleared.Add(id);
             CurrentNodeId = id;
             return true;
+        }
+
+        public static bool VisitEvent(int id)
+        {
+            if (!CanSelect(id)) return false;
+            Cleared.Add(id);
+            CurrentNodeId = id;
+            return true;
+        }
+
+        // ---- event helpers -------------------------------------------------------
+        public static bool TeamAboveOne() => PlayerRoster.Count > 1;
+        public static bool HasAnyItem() => Inventory.Count > 0;
+
+        public static void ExpandRoster(int n = 1)
+        {
+            if (n > 0) MaxRoster += n;
+        }
+
+        public static void AddLevels(int index, int amount)
+        {
+            if (index < 0 || index >= PlayerRoster.Count) return;
+            var m = PlayerRoster[index];
+            m.Level = Math.Max(1, m.Level + amount);
+        }
+
+        public static void AddLevelsAll(int amount)
+        {
+            foreach (var m in PlayerRoster) m.Level = Math.Max(1, m.Level + amount);
+        }
+
+        public static void GrantRandomAbility(int index, int seed)
+        {
+            if (index < 0 || index >= PlayerRoster.Count) return;
+            var ids = PlayerRoster[index].AbilityIds;
+            for (int i = 0; i <= 8; i++)
+            {
+                string id = AbilityCatalog.RollId(seed + i);
+                if (!ids.Contains(id)) { ids.Add(id); return; }
+            }
+            // every attempt collided â€” monster likely already has the rolled ids; no-op.
+        }
+
+        public static bool LoseRandomItemType(int seed)
+        {
+            if (Inventory.Count == 0) return false;
+            var keys = new List<string>(Inventory.Keys);
+            var rng = new Random(seed);
+            string key = keys[rng.Next(keys.Count)];
+            Inventory.Remove(key);
+            return true;
+        }
+
+        public static void SpendGoldClamped(int n)
+        {
+            Gold = Math.Max(0, Gold - n);
         }
 
         // Release a roster monster (only when more than one remains).

@@ -47,12 +47,12 @@ namespace MonsterCatcher.Map.Tests
 
         [Test] public void BeatingBossWinsRun()
         {
-            int floor8 = -1;
-            foreach (var n in RunState.Map.NodesInRow(8))
-                if (n.Next.Contains(RunState.Map.BossId)) { floor8 = n.Id; break; }
-            Assert.AreNotEqual(-1, floor8);
-            RunState.CurrentNodeId = floor8;
-            RunState.Cleared.Add(floor8);
+            int lastFloor = -1;
+            foreach (var n in RunState.Map.NodesInRow(MapGenerator.Floors))
+                if (n.Next.Contains(RunState.Map.BossId)) { lastFloor = n.Id; break; }
+            Assert.AreNotEqual(-1, lastFloor);
+            RunState.CurrentNodeId = lastFloor;
+            RunState.Cleared.Add(lastFloor);
             RunState.Select(RunState.Map.BossId);
             RunState.ReportBattleResult(true);
             Assert.IsTrue(RunState.RunWon);

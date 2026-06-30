@@ -61,7 +61,7 @@ namespace MonsterCatcher.Battle
                 if (save.CurrentHp < p.MaxHp) p.SetCurrentHp(save.CurrentHp);
                 mons.Add(p);
             }
-            return new Party(BattleSide.Player, mons, settings.MaxPartySize);
+            return new Party(BattleSide.Player, mons, System.Math.Max(settings.MaxPartySize, mons.Count));
         }
 
         private static Party BuildEnemy(BattleSettings settings)

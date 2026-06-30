@@ -54,9 +54,9 @@ namespace MonsterCatcher.Map.Tests
 
         [Test] public void EnemyStageByFloor()
         {
-            Assert.AreEqual(0, RunState.StageForRow(NodeType.Battle, 2));
-            Assert.AreEqual(1, RunState.StageForRow(NodeType.Battle, 5));
-            Assert.AreEqual(2, RunState.StageForRow(NodeType.Battle, 8));
+            Assert.AreEqual(0, RunState.StageForRow(NodeType.Battle, 3));
+            Assert.AreEqual(1, RunState.StageForRow(NodeType.Battle, 10));
+            Assert.AreEqual(2, RunState.StageForRow(NodeType.Battle, 18));
             Assert.AreEqual(2, RunState.StageForRow(NodeType.Boss, 1));
         }
 

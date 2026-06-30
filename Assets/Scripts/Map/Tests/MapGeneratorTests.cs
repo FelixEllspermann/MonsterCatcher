@@ -41,7 +41,7 @@ namespace MonsterCatcher.Map.Tests
             for (int seed = 0; seed <= 50; seed++)
             {
                 var m = MapGenerator.Generate(seed);
-                Assert.AreEqual(10, m.RowCount, "seed " + seed);
+                Assert.AreEqual(MapGenerator.Floors + 2, m.RowCount, "seed " + seed);
 
                 int starts = 0, bosses = 0;
                 foreach (var n in m.Nodes)
@@ -52,9 +52,9 @@ namespace MonsterCatcher.Map.Tests
                 Assert.AreEqual(1, starts, "seed " + seed);
                 Assert.AreEqual(1, bosses, "seed " + seed);
                 Assert.AreEqual(0, m.Get(m.StartId).Row);
-                Assert.AreEqual(9, m.Get(m.BossId).Row);
+                Assert.AreEqual(MapGenerator.Floors + 1, m.Get(m.BossId).Row);
 
-                for (int f = 1; f <= 8; f++)
+                for (int f = 1; f <= MapGenerator.Floors; f++)
                 {
                     int count = new List<MapNode>(m.NodesInRow(f)).Count;
                     Assert.IsTrue(count >= 2 && count <= 5, "floor " + f + " seed " + seed + " count " + count);
@@ -104,7 +104,7 @@ namespace MonsterCatcher.Map.Tests
                     if (n.Type == NodeType.Heal)
                     {
                         healTotal++;
-                        Assert.IsTrue(n.Row >= 2 && n.Row <= 8, "heal on row " + n.Row + " seed " + seed);
+                        Assert.IsTrue(n.Row >= 2 && n.Row <= MapGenerator.Floors, "heal on row " + n.Row + " seed " + seed);
                     }
                 }
             }

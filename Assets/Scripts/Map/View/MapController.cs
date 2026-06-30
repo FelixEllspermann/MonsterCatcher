@@ -9,16 +9,20 @@ namespace MonsterCatcher.Map.View
 {
     public sealed class MapController : MonoBehaviour
     {
-        private const float MarginX = 0.10f, MarginY = 0.08f;
-        private static readonly Vector2 ContainerSize = new Vector2(1140f, 640f);
+        private const float RowGap = 130f, VMargin = 80f, HMargin = 70f;
+
+        private static Vector2 ContentSize =>
+            new Vector2(1100f, (RunState.Map.RowCount - 1) * RowGap + 2f * VMargin);
 
         private Font _font;
-        private RectTransform _container;
+        private RectTransform _content;
+        private ScrollRect _scroll;
         private Text _title;
         private readonly Dictionary<int, Button> _nodeButtons = new Dictionary<int, Button>();
         private readonly Dictionary<int, Image> _nodeImages = new Dictionary<int, Image>();
         private MonsterView _monsterView;
         private ShopView _shopView;
+        private EventView _eventView;
 
         private void Start()
         {
@@ -36,9 +40,31 @@ namespace MonsterCatcher.Map.View
 
         private Vector2 LocalPos(MapNode n)
         {
-            float xNorm = Mathf.Lerp(MarginX, 1f - MarginX, n.X);
-            float yNorm = Mathf.Lerp(MarginY, 1f - MarginY, (float)n.Row / (RunState.Map.RowCount - 1));
-            return new Vector2((xNorm - 0.5f) * ContainerSize.x, (yNorm - 0.5f) * ContainerSize.y);
+            Vector2 size = ContentSize;
+            float halfW = size.x * 0.5f, halfH = size.y * 0.5f;
+            // Start and Boss nodes stay centered on their lane (little/no x jitter).
+            bool anchored = n.Type == NodeType.Start || n.Type == NodeType.Boss;
+            float xJit = anchored ? 0f : Jitter(n.Id, 1, 38f);
+            float x = Mathf.Lerp(-halfW + HMargin, halfW - HMargin, n.X) + xJit;
+            float y = -halfH + VMargin + n.Row * RowGap + Jitter(n.Id, 2, 18f);
+            return new Vector2(x, y);
+        }
+
+        // Deterministic, stable per (id, salt) offset in [-amp, amp]. Pure hash, no Random.
+        private static float Jitter(int id, int salt, float amp)
+        {
+            unchecked
+            {
+                int h = (int)2166136261;
+                h = (h ^ id) * 16777619;
+                h = (h ^ salt) * 16777619;
+                h ^= h >> 13;
+                h *= unchecked((int)0x5bd1e995);
+                h ^= h >> 15;
+                // map low bits to [0,1)
+                float t = (h & 0x7fffffff) / 2147483648f;
+                return (t * 2f - 1f) * amp;
+            }
         }
 
         // ---- build ---------------------------------------------------------
@@ -66,12 +92,7 @@ namespace MonsterCatcher.Map.View
             mlbl.text = "Monsters";
             monstersBtn.onClick.AddListener(OpenMonsterView);
 
-            var container = MakePanel(canvasRt, new Color(0f, 0f, 0f, 0f));
-            var crt = container.rectTransform;
-            crt.anchorMin = crt.anchorMax = new Vector2(0.5f, 0.5f);
-            crt.sizeDelta = ContainerSize;
-            crt.anchoredPosition = new Vector2(0f, -10f);
-            _container = crt;
+            BuildScroll(canvasRt);
 
             // edges first (behind nodes)
             foreach (var n in RunState.Map.Nodes)
@@ -82,9 +103,59 @@ namespace MonsterCatcher.Map.View
             foreach (var n in RunState.Map.Nodes) MakeNode(n);
         }
 
+        private void BuildScroll(RectTransform canvasRt)
+        {
+            // ScrollRoot fills the area under the title.
+            var scrollRoot = NewRect("ScrollRoot", canvasRt);
+            SetAnchors(scrollRoot, 0.02f, 0.02f, 0.98f, 0.90f);
+            _scroll = scrollRoot.gameObject.AddComponent<ScrollRect>();
+            _scroll.horizontal = false;
+            _scroll.vertical = true;
+            _scroll.movementType = ScrollRect.MovementType.Clamped;
+            _scroll.scrollSensitivity = 30f;
+
+            // Viewport (stretched) with a near-invisible image (to catch drags) + mask.
+            var viewport = NewRect("Viewport", scrollRoot);
+            Stretch(viewport);
+            var vpImg = viewport.gameObject.AddComponent<Image>();
+            vpImg.color = new Color(0f, 0f, 0f, 0.001f);
+            viewport.gameObject.AddComponent<RectMask2D>();
+
+            // Content holds edges + nodes, centered.
+            var content = NewRect("Content", viewport);
+            content.anchorMin = content.anchorMax = new Vector2(0.5f, 0.5f);
+            content.pivot = new Vector2(0.5f, 0.5f);
+            content.sizeDelta = ContentSize;
+            _content = content;
+
+            _scroll.viewport = viewport;
+            _scroll.content = content;
+
+            // Vertical scrollbar pinned to the right edge of ScrollRoot.
+            var sbRt = NewRect("Scrollbar", scrollRoot);
+            sbRt.anchorMin = new Vector2(1f, 0f);
+            sbRt.anchorMax = new Vector2(1f, 1f);
+            sbRt.pivot = new Vector2(1f, 0.5f);
+            sbRt.sizeDelta = new Vector2(14f, 0f);
+            sbRt.anchoredPosition = Vector2.zero;
+            var sbImg = sbRt.gameObject.AddComponent<Image>();
+            sbImg.color = new Color(0f, 0f, 0f, 0.35f);
+            var scrollbar = sbRt.gameObject.AddComponent<Scrollbar>();
+            scrollbar.direction = Scrollbar.Direction.BottomToTop;
+
+            var handleRt = NewRect("Handle", sbRt);
+            Stretch(handleRt);
+            var handleImg = handleRt.gameObject.AddComponent<Image>();
+            handleImg.color = new Color(0.6f, 0.62f, 0.7f, 0.9f);
+            scrollbar.targetGraphic = handleImg;
+            scrollbar.handleRect = handleRt;
+
+            _scroll.verticalScrollbar = scrollbar;
+        }
+
         private void MakeEdge(Vector2 a, Vector2 b)
         {
-            var rt = NewRect("Edge", _container);
+            var rt = NewRect("Edge", _content);
             var img = rt.gameObject.AddComponent<Image>();
             img.color = new Color(1f, 1f, 1f, 0.18f);
             img.raycastTarget = false;
@@ -98,7 +169,7 @@ namespace MonsterCatcher.Map.View
 
         private void MakeNode(MapNode n)
         {
-            var rt = NewRect("Node" + n.Id, _container);
+            var rt = NewRect("Node" + n.Id, _content);
             rt.anchorMin = rt.anchorMax = new Vector2(0.5f, 0.5f);
             rt.sizeDelta = n.Type == NodeType.Boss ? new Vector2(120f, 50f) : new Vector2(54f, 54f);
             rt.anchoredPosition = LocalPos(n);
@@ -111,7 +182,12 @@ namespace MonsterCatcher.Map.View
 
             var label = MakeText(rt, n.Type == NodeType.Boss ? 18 : 14, TextAnchor.MiddleCenter, Color.white);
             Stretch(label.rectTransform);
-            label.text = n.Type == NodeType.Start ? "Start" : n.Type == NodeType.Boss ? "BOSS" : n.Type == NodeType.Heal ? "+" : n.Type == NodeType.Shop ? "$" : "";
+            label.text =
+                n.Type == NodeType.Start ? "Start" :
+                n.Type == NodeType.Boss ? "BOSS" :
+                n.Type == NodeType.Heal ? "+" :
+                n.Type == NodeType.Shop ? "$" :
+                n.Type == NodeType.Event ? "?" : "";
 
             _nodeButtons[n.Id] = btn;
             _nodeImages[n.Id] = img;
@@ -126,6 +202,13 @@ namespace MonsterCatcher.Map.View
                 var status = RunState.StatusOf(n.Id);
                 _nodeImages[n.Id].color = ColorFor(n.Type, status);
                 _nodeButtons[n.Id].interactable = status == NodeStatus.Available;
+            }
+
+            if (_scroll != null)
+            {
+                int rows = Mathf.Max(1, RunState.Map.RowCount - 1);
+                _scroll.verticalNormalizedPosition =
+                    Mathf.Clamp01((float)RunState.Map.Get(RunState.CurrentNodeId).Row / rows);
             }
         }
 
@@ -148,6 +231,12 @@ namespace MonsterCatcher.Map.View
                 if (status == NodeStatus.Available) return new Color(0.95f, 0.82f, 0.3f);
                 if (status == NodeStatus.Cleared || status == NodeStatus.Current) return new Color(0.6f, 0.55f, 0.3f);
                 return new Color(0.4f, 0.38f, 0.25f);
+            }
+            if (type == NodeType.Event)
+            {
+                if (status == NodeStatus.Available) return new Color(0.65f, 0.45f, 0.95f);
+                if (status == NodeStatus.Cleared || status == NodeStatus.Current) return new Color(0.45f, 0.35f, 0.6f);
+                return new Color(0.32f, 0.28f, 0.4f);
             }
             switch (status)
             {
@@ -180,13 +269,19 @@ namespace MonsterCatcher.Map.View
                 _shopView.Open(id, () => { if (_title != null) _title.text = "Left the shop."; RefreshNodes(); });
                 return;
             }
+            if (RunState.Map.Get(id).Type == NodeType.Event)
+            {
+                if (_eventView == null) _eventView = new GameObject("EventView").AddComponent<EventView>();
+                _eventView.Open(id, () => { if (_title != null) _title.text = "Event resolved."; RefreshNodes(); });
+                return;
+            }
             RunState.Select(id);
             SceneManager.LoadScene("Battle");
         }
 
         private void ShowOverlay(string message)
         {
-            var canvasRt = (RectTransform)_container.parent;
+            var canvasRt = (RectTransform)_scroll.transform.parent;
             var panel = MakePanel(canvasRt, new Color(0f, 0f, 0f, 0.75f));
             Stretch(panel.rectTransform);
 
