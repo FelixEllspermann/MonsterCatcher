@@ -172,12 +172,10 @@ namespace MonsterCatcher.Battle
                     events.Add(new ItemUsedEvent("Used a Potion."));
                     events.Add(new HealedEvent(active, active.CurrentHp - before));
                     return true;
-                case "Remedy":
-                    if (active.Status == StatusCondition.None)
-                    { events.Add(new ItemUsedEvent(active.Species.DisplayName + " has no status to cure.")); return false; }
-                    active.CureStatus();
-                    events.Add(new ItemUsedEvent(active.Species.DisplayName + "'s status was cured."));
-                    return true;
+                case "Antidote": return CureSpecific(active, StatusCondition.Poison, events);
+                case "BurnHeal": return CureSpecific(active, StatusCondition.Burn, events);
+                case "ParalyzeHeal": return CureSpecific(active, StatusCondition.Paralysis, events);
+                case "Awakening": return CureSpecific(active, StatusCondition.Sleep, events);
                 case "XAttack":
                     active.ChangeStage(Stat.Attack, 1);
                     events.Add(new ItemUsedEvent(active.Species.DisplayName + "'s Attack rose!"));
@@ -193,6 +191,18 @@ namespace MonsterCatcher.Battle
                     events.Add(new ItemUsedEvent("You can't use that here."));
                     return false;
             }
+        }
+
+        private static bool CureSpecific(Pokemon active, StatusCondition status, List<BattleEvent> events)
+        {
+            if (active.Status != status)
+            {
+                events.Add(new ItemUsedEvent(active.Species.DisplayName + " isn't affected by " + status + "."));
+                return false;
+            }
+            active.CureStatus();
+            events.Add(new ItemUsedEvent(active.Species.DisplayName + "'s " + status + " was cured."));
+            return true;
         }
 
         private Pokemon FirstFaintedMember()

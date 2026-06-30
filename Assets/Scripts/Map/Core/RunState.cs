@@ -89,7 +89,7 @@ namespace MonsterCatcher.Map
                 new MonsterSave(StarterFor(seed), StarterLevel),
             };
             RollStarterAbility(PlayerRoster[0], seed ^ 0x5f3759df);
-            Inventory = new Dictionary<string, int> { { "MonsterCatcher", 3 }, { "Potion", 2 }, { "Remedy", 1 } };
+            Inventory = new Dictionary<string, int> { { "MonsterCatcher", 3 }, { "Potion", 2 }, { "Antidote", 1 } };
             Gold = 0;
             Tier = 1;
             InRun = true;

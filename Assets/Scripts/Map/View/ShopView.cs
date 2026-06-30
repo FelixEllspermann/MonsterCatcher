@@ -14,6 +14,7 @@ namespace MonsterCatcher.Map.View
         private Text _goldText;
         private int _nodeId;
         private System.Action _onLeave;
+        private System.Collections.Generic.List<string> _offer;
 
         private void Awake()
         {
@@ -27,6 +28,7 @@ namespace MonsterCatcher.Map.View
         {
             _nodeId = nodeId;
             _onLeave = onLeave;
+            _offer = ItemCatalog.RandomOffer(nodeId, 3);   // 3 random wares per shop
             _root.SetActive(true);
             Refresh();
         }
@@ -69,20 +71,20 @@ namespace MonsterCatcher.Map.View
             _goldText.text = "Gold: " + RunState.Gold;
             for (int i = _list.childCount - 1; i >= 0; i--) Destroy(_list.GetChild(i).gameObject);
 
-            var items = ItemCatalog.All;
-            for (int i = 0; i < items.Count; i++)
+            for (int i = 0; i < _offer.Count; i++)
             {
-                var info = items[i];
-                float top = 0.97f - i * 0.185f;
+                var info = ItemCatalog.ById(_offer[i]);
+                if (info == null) continue;
+                float top = 0.90f - i * 0.30f;
 
-                var rowText = MakeText(_list, 16, TextAnchor.MiddleLeft, Color.white);
-                SetAnchors(rowText.rectTransform, 0.03f, top - 0.165f, 0.71f, top);
+                var rowText = MakeText(_list, 17, TextAnchor.MiddleLeft, Color.white);
+                SetAnchors(rowText.rectTransform, 0.03f, top - 0.26f, 0.71f, top);
                 rowText.horizontalOverflow = HorizontalWrapMode.Wrap;
                 rowText.text = info.Name + "  -  " + info.Description + "   (have " + RunState.ItemCount(info.Id) + ")";
 
                 bool canBuy = RunState.Gold >= info.Price;
                 var buy = MakeButton(_list, canBuy ? new Color(0.25f, 0.45f, 0.32f) : new Color(0.3f, 0.3f, 0.3f), out var blbl);
-                SetAnchors((RectTransform)buy.transform, 0.73f, top - 0.15f, 0.97f, top - 0.015f);
+                SetAnchors((RectTransform)buy.transform, 0.73f, top - 0.22f, 0.97f, top - 0.04f);
                 blbl.text = "Buy  " + info.Price + "g";
                 buy.interactable = canBuy;
                 string id = info.Id; int price = info.Price;

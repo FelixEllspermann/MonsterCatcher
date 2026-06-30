@@ -9,7 +9,7 @@ namespace MonsterCatcher.Map.Tests
             RunState.NewRun(3);
             Assert.AreEqual(3, RunState.ItemCount("MonsterCatcher"));
             Assert.AreEqual(2, RunState.ItemCount("Potion"));
-            Assert.AreEqual(1, RunState.ItemCount("Remedy"));
+            Assert.AreEqual(1, RunState.ItemCount("Antidote"));
             Assert.AreEqual(0, RunState.Gold);
         }
 

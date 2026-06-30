@@ -25,6 +25,15 @@ namespace MonsterCatcher.Map.Tests
             Assert.AreEqual(100 - potion.Price, RunState.Gold);
         }
 
+        [Test] public void ShopOffersThreeDistinctRandomItems()
+        {
+            var offer = ItemCatalog.RandomOffer(5, 3);
+            Assert.AreEqual(3, offer.Count);
+            Assert.AreEqual(3, new System.Collections.Generic.HashSet<string>(offer).Count);   // distinct
+            foreach (var id in offer) Assert.IsNotNull(ItemCatalog.ById(id));
+            CollectionAssert.AreEqual(offer, ItemCatalog.RandomOffer(5, 3));                    // deterministic per seed
+        }
+
         [Test] public void ShopNodesAppearAcrossSeeds()
         {
             bool seen = false;
