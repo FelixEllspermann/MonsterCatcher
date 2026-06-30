@@ -84,11 +84,11 @@ namespace MonsterCatcher.Battle
         public int GetStage(Stat stat) => _stages[(int)stat];
 
         public int EffectiveStat(Stat stat, bool crit = false,
-            bool ignoreNegative = false, bool ignorePositive = false)
+            bool ignoreNegative = false, bool ignorePositive = false, bool unconditional = false)
         {
             int stage = _stages[(int)stat];
-            if (crit && ignoreNegative && stage < 0) stage = 0;
-            if (crit && ignorePositive && stage > 0) stage = 0;
+            if ((crit || unconditional) && ignoreNegative && stage < 0) stage = 0;
+            if ((crit || unconditional) && ignorePositive && stage > 0) stage = 0;
             double value = _rawStats[(int)stat] * StatStages.Multiplier(stage);
             if (stat != Stat.Hp) value *= AbilityApplier.StatMult(this, stat);
             int result = (int)Math.Floor(value);
@@ -113,6 +113,9 @@ namespace MonsterCatcher.Battle
         public void TakeDamage(int amount)
         {
             if (amount < 0) amount = 0;
+            // Last Stand: survive one otherwise-lethal hit at 1 HP (set inside TrySurviveLethal).
+            if (amount > 0 && CurrentHp > 0 && amount >= CurrentHp && AbilityApplier.TrySurviveLethal(this))
+                return;
             CurrentHp -= amount;
             if (CurrentHp < 0) CurrentHp = 0;
         }
@@ -135,6 +138,7 @@ namespace MonsterCatcher.Battle
         {
             if (status == StatusCondition.None) return false;
             if (Status != StatusCondition.None || IsFainted) return false;
+            if (AbilityApplier.ImmuneToStatus(this, status)) return false;
             Status = status;
             SleepTurnsLeft = status == StatusCondition.Sleep ? sleepTurns : 0;
             return true;

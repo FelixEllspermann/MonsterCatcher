@@ -97,8 +97,10 @@ namespace MonsterCatcher.Map
         public bool ReviveOnce = false; public float ReviveFraction = 0f;
         public bool SurviveLethalOnce = false;
 
-        // Offensive special
+        // Status secondary-chance + offensive special
+        public float SecondaryChanceMult = 1f;
         public bool AllMovesStab = false;
+        public bool DoubleStab = false;
         public bool TintedLens = false;
         public float ExecuteThreshold = 0f;
         public bool SuppressFoeBoosts = false;

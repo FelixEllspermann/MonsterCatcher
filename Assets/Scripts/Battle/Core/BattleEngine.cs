@@ -22,6 +22,8 @@ namespace MonsterCatcher.Battle
             _rng = rng;
             Player.Active.Participated = true;
             Enemy.Active.Participated = true;
+            AbilityApplier.OnEntry(Player.Active, Enemy.Active);
+            AbilityApplier.OnEntry(Enemy.Active, Player.Active);
         }
 
         public bool AwaitingForcedSwitch(BattleSide side) => _forcedSwitch[(int)side];
@@ -50,11 +52,13 @@ namespace MonsterCatcher.Battle
             pending.Sort(CompareOrder);
 
             // 3. Execute moves.
+            bool firstMoveDone = false;
             foreach (var entry in pending)
             {
                 var user = PartyOf(entry.side).Active;
                 if (user.IsFainted) continue;
-                ExecuteMove(entry.side, entry.action.Index, events);
+                ExecuteMove(entry.side, entry.action.Index, events, firstMoveDone);
+                firstMoveDone = true;
                 if (IsOver) return events;
             }
 
@@ -63,6 +67,10 @@ namespace MonsterCatcher.Battle
             if (IsOver) return events;
             EndOfTurnStatus(BattleSide.Enemy, events);
             if (IsOver) return events;
+
+            // Track how many turns each active has been out (first-turn / ramping abilities).
+            Player.Active.AbilityState.TurnsOut++;
+            Enemy.Active.AbilityState.TurnsOut++;
 
             // 5. Flag forced switches for fainted actives with replacements.
             FlagForcedSwitchIfNeeded(BattleSide.Player);
@@ -81,6 +89,8 @@ namespace MonsterCatcher.Battle
                 {
                     party.SwitchTo(action.Index);
                     party.Active.Participated = true;
+                    party.Active.AbilityState.TurnsOut = 0;
+                    AbilityApplier.OnEntry(party.Active, OpponentOf(side).Active, events);
                     events.Add(new SwitchedInEvent(side, party.Active));
                 }
             }
@@ -93,6 +103,13 @@ namespace MonsterCatcher.Battle
         private int CompareOrder((BattleSide side, BattleAction action) x,
             (BattleSide side, BattleAction action) y)
         {
+            var ax = PartyOf(x.side).Active;
+            var ay = PartyOf(y.side).Active;
+            bool fx = AbilityApplier.ForcesFirst(ax), fy = AbilityApplier.ForcesFirst(ay);
+            if (fx != fy) return fx ? -1 : 1;       // Time Warp moves first turn 1
+            bool lx = AbilityApplier.ForcesLast(ax), ly = AbilityApplier.ForcesLast(ay);
+            if (lx != ly) return lx ? 1 : -1;       // Reversal always moves last
+
             int px = MovePriority(x.side, x.action.Index);
             int py = MovePriority(y.side, y.action.Index);
             if (px != py) return py.CompareTo(px); // higher priority first
@@ -106,21 +123,24 @@ namespace MonsterCatcher.Battle
 
         private int MovePriority(BattleSide side, int moveIndex)
         {
-            var moves = PartyOf(side).Active.Moves;
+            var active = PartyOf(side).Active;
+            var moves = active.Moves;
             if (moveIndex < 0 || moveIndex >= moves.Count) return 0;
-            return moves[moveIndex].Move.Priority;
+            var move = moves[moveIndex].Move;
+            return move.Priority + AbilityApplier.PriorityBonus(active, move);
         }
 
         private int EffectiveSpeed(BattleSide side)
         {
             var p = PartyOf(side).Active;
-            int speed = p.EffectiveStat(Stat.Speed);
-            if (p.Status == StatusCondition.Paralysis)
-                speed = (int)Math.Floor(speed * _settings.ParalysisSpeedMultiplier);
-            return speed < 1 ? 1 : speed;
+            double speed = p.EffectiveStat(Stat.Speed) * AbilityApplier.SpeedFactor(p);
+            if (p.Status == StatusCondition.Paralysis && !AbilityApplier.ParalysisSpeedImmune(p))
+                speed *= _settings.ParalysisSpeedMultiplier;
+            int s = (int)Math.Floor(speed);
+            return s < 1 ? 1 : s;
         }
 
-        private void ExecuteMove(BattleSide side, int moveIndex, List<BattleEvent> events)
+        private void ExecuteMove(BattleSide side, int moveIndex, List<BattleEvent> events, bool movedAfter = false)
         {
             var user = PartyOf(side).Active;
             var target = OpponentOf(side).Active;
@@ -160,7 +180,9 @@ namespace MonsterCatcher.Battle
             else slot.TryUse();
             events.Add(new MoveUsedEvent(user, slot.Move));
 
-            var dmg = DamageCalculator.Calculate(user, target, slot.Move, _settings, _rng);
+            int faintedAllies = 0;
+            foreach (var m in PartyOf(side).Members) if (m.IsFainted) faintedAllies++;
+            var dmg = DamageCalculator.Calculate(user, target, slot.Move, _settings, _rng, faintedAllies, movedAfter);
             if (!dmg.Hit)
             {
                 events.Add(new MissedEvent(user, slot.Move));
@@ -169,17 +191,33 @@ namespace MonsterCatcher.Battle
 
             if (dmg.Damage > 0)
             {
+                if (AbilityApplier.ExecutesFoe(user, target) && dmg.Damage < target.CurrentHp)
+                    dmg.Damage = target.CurrentHp;   // Executioner finishes low-HP foes
                 target.TakeDamage(dmg.Damage);
                 events.Add(new DamageEvent(target, dmg.Damage, dmg.Effectiveness, dmg.WasCritical));
+                target.AbilityState.FirstHitTaken = true;
                 ApplyRecoilAndDrain(user, slot.Move, dmg.Damage, events);
+                int drained = AbilityApplier.DrainAmount(user, dmg.Damage);
+                if (drained > 0) { user.Heal(drained); events.Add(new DrainEvent(user, drained)); }
+                AbilityApplier.OnDealtDamage(user, target, events);       // Thorns + on-hit self-buff
+                AbilityApplier.OnHitInflict(user, target, _rng, events);  // Venomtouch / Static Body
             }
 
             ApplySecondaryEffects(user, target, slot.Move, events);
 
             if (target.IsFainted)
             {
-                events.Add(new FaintedEvent(target));
-                CheckBattleEnd(events);
+                if (AbilityApplier.TryRevive(target))
+                {
+                    events.Add(new RevivedEvent(target));
+                }
+                else
+                {
+                    AbilityApplier.OnKo(user, events);              // Moxie
+                    AbilityApplier.OnFaint(target, user, events);   // Aftermath
+                    events.Add(new FaintedEvent(target));
+                    CheckBattleEnd(events);
+                }
             }
             if (user.IsFainted)
             {
@@ -191,8 +229,10 @@ namespace MonsterCatcher.Battle
         private void ApplySecondaryEffects(Pokemon user, Pokemon target, MoveData move,
             List<BattleEvent> events)
         {
+            double chanceMult = AbilityApplier.SecondaryChanceMult(user);   // Lucky Charm
+
             if (move.InflictsStatus != StatusCondition.None && move.StatusChance > 0
-                && _rng.Roll(move.StatusChance / 100.0))
+                && _rng.Roll(move.StatusChance / 100.0 * chanceMult))
             {
                 int sleepTurns = move.InflictsStatus == StatusCondition.Sleep
                     ? _rng.IntInclusive(_settings.MinSleepTurns, _settings.MaxSleepTurns) : 0;
@@ -201,9 +241,12 @@ namespace MonsterCatcher.Battle
             }
 
             if (move.StatStageDelta != 0 && move.StatChangeChance > 0
-                && _rng.Roll(move.StatChangeChance / 100.0))
+                && _rng.Roll(move.StatChangeChance / 100.0 * chanceMult))
             {
                 var recipient = move.StatChangeTargetsSelf ? user : target;
+                bool foeDrop = !move.StatChangeTargetsSelf && move.StatStageDelta < 0;
+                if (foeDrop && AbilityApplier.ImmuneToStatDrops(recipient))
+                    return;   // Hardy Mind ignores foe-inflicted stat drops
                 int applied = recipient.ChangeStage(move.StatToChange, move.StatStageDelta);
                 if (applied != 0)
                     events.Add(new StatChangedEvent(recipient, move.StatToChange, applied));
@@ -212,7 +255,7 @@ namespace MonsterCatcher.Battle
 
         private static void ApplyRecoilAndDrain(Pokemon user, MoveData move, int damageDealt, List<BattleEvent> events)
         {
-            if (move.RecoilPercent > 0)
+            if (move.RecoilPercent > 0 && !AbilityApplier.RecoilImmune(user))
             {
                 int recoil = damageDealt * move.RecoilPercent / 100;
                 if (recoil < 1) recoil = 1;
@@ -234,9 +277,9 @@ namespace MonsterCatcher.Battle
             if (p.IsFainted) return;
 
             int dmg = 0;
-            if (p.Status == StatusCondition.Poison)
+            if (p.Status == StatusCondition.Poison && !AbilityApplier.PoisonChipBlocked(p))
                 dmg = (int)Math.Floor(p.MaxHp * _settings.PoisonFraction);
-            else if (p.Status == StatusCondition.Burn)
+            else if (p.Status == StatusCondition.Burn && !AbilityApplier.BurnChipBlocked(p))
                 dmg = (int)Math.Floor(p.MaxHp * _settings.BurnFraction);
 
             if (dmg > 0)
@@ -248,7 +291,16 @@ namespace MonsterCatcher.Battle
                 {
                     events.Add(new FaintedEvent(p));
                     CheckBattleEnd(events);
+                    return;
                 }
+            }
+
+            // Ability regeneration (Regrowth/Mending/Bloom) + one-time heal (Second Wind).
+            int heal = AbilityApplier.EndOfTurnHeal(p) + AbilityApplier.OneTimeHeal(p);
+            if (heal > 0 && !p.IsFainted && p.CurrentHp < p.MaxHp)
+            {
+                p.Heal(heal);
+                events.Add(new DrainEvent(p, heal));
             }
         }
 
@@ -269,7 +321,9 @@ namespace MonsterCatcher.Battle
             int target = party.CanSwitchTo(partyIndex) ? partyIndex : party.FirstUsableIndex();
             party.SwitchTo(target);
             party.Active.Participated = true;
+            party.Active.AbilityState.TurnsOut = 0;
             _forcedSwitch[(int)side] = false;
+            AbilityApplier.OnEntry(party.Active, OpponentOf(side).Active, events);
             events.Add(new SwitchedInEvent(side, party.Active));
             return events;
         }

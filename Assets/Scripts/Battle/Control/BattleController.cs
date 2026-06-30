@@ -67,7 +67,8 @@ namespace MonsterCatcher.Battle
         {
             var species = Resources.Load<SpeciesData>("Species/" + RunState.PendingEnemySpecies());
             int level = RunState.PendingEnemyLevel();
-            var e = new Pokemon(species, level, MovesFor(species, level));
+            var ability = AbilityCatalog.RollId(RunState.PendingNodeId * 31 + RunState.Tier * 101 + 7);
+            var e = new Pokemon(species, level, MovesFor(species, level), new[] { ability });
             return new Party(BattleSide.Enemy, new List<Pokemon> { e }, settings.MaxPartySize);
         }
 

@@ -27,5 +27,15 @@ namespace MonsterCatcher.Map.Tests
             var seen = new HashSet<string>();
             foreach (var a in AbilityCatalog.All) Assert.IsTrue(seen.Add(a.Id), "duplicate id " + a.Id);
         }
+
+        [Test] public void CatalogHas110With70Buffs40Defining()
+        {
+            Assert.AreEqual(110, AbilityCatalog.All.Count);
+            int buffs = 0, defining = 0;
+            foreach (var a in AbilityCatalog.All)
+                if (a.Category == AbilityCategory.Buff) buffs++; else defining++;
+            Assert.AreEqual(70, buffs, "buffs");
+            Assert.AreEqual(40, defining, "defining");
+        }
     }
 }

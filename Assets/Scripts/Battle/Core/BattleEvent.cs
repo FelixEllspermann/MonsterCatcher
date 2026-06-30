@@ -85,4 +85,10 @@ namespace MonsterCatcher.Battle
         public readonly Pokemon User; public readonly int Amount;
         public DrainEvent(Pokemon user, int amount) { User = user; Amount = amount; }
     }
+
+    public sealed class RevivedEvent : BattleEvent
+    {
+        public readonly Pokemon Target;
+        public RevivedEvent(Pokemon target) { Target = target; }
+    }
 }
